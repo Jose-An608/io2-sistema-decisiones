@@ -167,3 +167,53 @@ BEGIN
     SELECT IdProducto, 78 FROM dbo.Producto WHERE Codigo = N'INV-005';
 END
 GO
+
+-- ---------- MÓDULO: PERT / CPM ----------
+-- Ejemplo CPM resuelto a mano (coincide con backend/tests/cpm.test.js):
+-- duración 10 días, ruta crítica A-D-E, holgura 1 en B y C
+IF NOT EXISTS (SELECT 1 FROM dbo.Proyecto WHERE Nombre = N'Ejemplo CPM: red A-E')
+BEGIN
+    INSERT INTO dbo.Proyecto (Nombre, Descripcion, Modo)
+    VALUES (N'Ejemplo CPM: red A-E', N'Cinco actividades con duración fija. Ruta crítica A-D-E (10 días).', 'cpm');
+    DECLARE @cpm INT = SCOPE_IDENTITY();
+
+    INSERT INTO dbo.Actividad_Pert (IdProyecto, Codigo, Nombre, Duracion, Orden) VALUES
+        (@cpm, N'A', N'Actividad A', 3, 0), (@cpm, N'B', N'Actividad B', 2, 1),
+        (@cpm, N'C', N'Actividad C', 4, 2), (@cpm, N'D', N'Actividad D', 5, 3),
+        (@cpm, N'E', N'Actividad E', 2, 4);
+
+    INSERT INTO dbo.Precedencia (IdActividad, IdPredecesora)
+    SELECT a.IdActividad, p.IdActividad
+    FROM (VALUES (N'C', N'A'), (N'D', N'A'), (N'D', N'B'), (N'E', N'C'), (N'E', N'D')) v(Act, Pred)
+    JOIN dbo.Actividad_Pert a ON a.IdProyecto = @cpm AND a.Codigo = v.Act
+    JOIN dbo.Actividad_Pert p ON p.IdProyecto = @cpm AND p.Codigo = v.Pred;
+END
+GO
+
+-- Ejemplo PERT: desarrollo de un sistema (tiempos en días)
+-- Tiempos esperados: A3 B4 C3 D7 E5 F3 G2 H1 -> duración 18, ruta crítica A-B-D-F-H,
+-- varianza del proyecto 3.4444 (desviación 1.856)
+IF NOT EXISTS (SELECT 1 FROM dbo.Proyecto WHERE Nombre = N'Ejemplo PERT: desarrollo de un sistema')
+BEGIN
+    INSERT INTO dbo.Proyecto (Nombre, Descripcion, Modo, FechaInicio)
+    VALUES (N'Ejemplo PERT: desarrollo de un sistema', N'Ocho actividades con tiempos optimista, más probable y pesimista.', 'pert', '2026-11-02');
+    DECLARE @pert INT = SCOPE_IDENTITY();
+
+    INSERT INTO dbo.Actividad_Pert (IdProyecto, Codigo, Nombre, Optimista, MasProbable, Pesimista, Orden) VALUES
+        (@pert, N'A', N'Análisis de requisitos',   2, 3, 4,  0),
+        (@pert, N'B', N'Diseño de base de datos',  2, 4, 6,  1),
+        (@pert, N'C', N'Diseño de interfaz',       1, 3, 5,  2),
+        (@pert, N'D', N'Programación del backend', 4, 6, 14, 3),
+        (@pert, N'E', N'Programación del frontend',3, 5, 7,  4),
+        (@pert, N'F', N'Integración y pruebas',    2, 3, 4,  5),
+        (@pert, N'G', N'Documentación',            1, 2, 3,  6),
+        (@pert, N'H', N'Entrega al cliente',       1, 1, 1,  7);
+
+    INSERT INTO dbo.Precedencia (IdActividad, IdPredecesora)
+    SELECT a.IdActividad, p.IdActividad
+    FROM (VALUES (N'B', N'A'), (N'C', N'A'), (N'D', N'B'), (N'E', N'C'), (N'F', N'D'), (N'F', N'E'),
+                 (N'G', N'B'), (N'G', N'C'), (N'H', N'F'), (N'H', N'G')) v(Act, Pred)
+    JOIN dbo.Actividad_Pert a ON a.IdProyecto = @pert AND a.Codigo = v.Act
+    JOIN dbo.Actividad_Pert p ON p.IdProyecto = @pert AND p.Codigo = v.Pred;
+END
+GO

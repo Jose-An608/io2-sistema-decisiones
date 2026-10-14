@@ -167,3 +167,25 @@ test('Normal estándar: valores de tabla', () => {
   casi(c.probabilidadNormal(1.96), 0.97500, 1e-4);
   casi(c.probabilidadNormal(-1.645), 0.04998, 1e-4);
 });
+
+// Ejemplo PERT de database/99_seed_data.sql (resuelto a mano):
+// te: A3 B4 C3 D7 E5 F3 G2 H1  ->  18 días, ruta crítica A-B-D-F-H
+// varianza = 1/9 + 4/9 + 25/9 + 1/9 + 0 = 31/9 = 3.4444
+test('PERT: ejemplo del seed (18 días, ruta A-B-D-F-H, varianza 31/9)', () => {
+  const r = c.analizarRed([
+    { id: 'A', optimista: 2, masProbable: 3, pesimista: 4 },
+    { id: 'B', optimista: 2, masProbable: 4, pesimista: 6, predecesoras: ['A'] },
+    { id: 'C', optimista: 1, masProbable: 3, pesimista: 5, predecesoras: ['A'] },
+    { id: 'D', optimista: 4, masProbable: 6, pesimista: 14, predecesoras: ['B'] },
+    { id: 'E', optimista: 3, masProbable: 5, pesimista: 7, predecesoras: ['C'] },
+    { id: 'F', optimista: 2, masProbable: 3, pesimista: 4, predecesoras: ['D', 'E'] },
+    { id: 'G', optimista: 1, masProbable: 2, pesimista: 3, predecesoras: ['B', 'C'] },
+    { id: 'H', optimista: 1, masProbable: 1, pesimista: 1, predecesoras: ['F', 'G'] },
+  ], 'pert');
+  casi(r.duracionProyecto, 18);
+  assert.deepEqual(r.rutasCriticas[0].actividades, ['A', 'B', 'D', 'F', 'H']);
+  casi(r.varianzaProyecto, 31 / 9);
+  casi(r.desviacionProyecto, Math.sqrt(31 / 9));
+  // holguras: C y E 3 días (rama del frontend), G 8 días, el resto crítico
+  assert.deepEqual(r.actividades.map((a) => a.holgura), [0, 0, 3, 0, 3, 0, 8, 0]);
+});
