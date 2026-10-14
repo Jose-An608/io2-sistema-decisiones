@@ -21,8 +21,8 @@ const ruta = (fn) => async (req, res) => {
 };
 
 function leerId(req, etiqueta = 'registro') {
-  const id = Number.parseInt(req.params.id, 10);
-  if (!Number.isInteger(id) || id <= 0) throw new ErrorValidacion(`Id de ${etiqueta} inválido.`);
+  const id = /^\d+$/.test(String(req.params.id)) ? Number(req.params.id) : 0;
+  if (!Number.isSafeInteger(id) || id <= 0) throw new ErrorValidacion(`Id de ${etiqueta} inválido.`);
   return id;
 }
 
