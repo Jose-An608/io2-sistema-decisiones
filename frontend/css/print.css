@@ -1,0 +1,78 @@
+/* =====================================================
+   Informes impresos: formato formal, blanco y negro
+   (se carga al final de cada página con media="print")
+   Formato formal: texto y tablas en blanco y negro; solo las figuras (gráficos y diagramas) van a color
+   ===================================================== */
+@page { size: A4; margin: 2.5cm; }
+
+/* Texto y tablas en blanco y negro; los gráficos y diagramas conservan su color */
+svg, canvas, img { -webkit-print-color-adjust: exact; print-color-adjust: exact; filter: none; }
+body {
+  background: #fff !important;
+  color: #000 !important;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 1.4;
+}
+body::before {
+  content: "Sistema de apoyo a la toma de decisiones — Investigación Operativa II";
+  display: block;
+  text-align: center;
+  font-size: 11pt;
+  letter-spacing: .02em;
+  padding-bottom: 6pt;
+  margin-bottom: 14pt;
+  border-bottom: 1.5pt solid #000;
+}
+h1, h2, h3, h4 { color: #000 !important; font-family: "Times New Roman", Times, serif; }
+h1 { font-size: 16pt; text-align: center; }
+h2 { font-size: 13pt; }
+
+.solo-impresion { color: #000 !important; text-align: center; font-style: italic; margin: 0 0 14pt !important; }
+
+/* Superficies sin color */
+.card, .tile, .stat, .alerta, .resumen, .kpi, .destacado, .banner,
+.badge, .clase, .clase-A, .clase-B, .clase-C, .estado, [class*="t-"], [class*="badge-"], [class*="est-"] {
+  background: #fff !important;
+  color: #000 !important;
+  box-shadow: none !important;
+  border-color: #000 !important;
+}
+.card { border: .75pt solid #000 !important; border-radius: 0 !important; }
+.tile, .stat { border-radius: 0 !important; }
+.badge, .clase { border: .75pt solid #000 !important; border-radius: 0 !important; font-weight: 700; }
+.stat strong, .tile .valor, strong { color: #000 !important; }
+.etq, .muted, small, .ayuda, .nota { color: #333 !important; }
+
+/* Tablas formales: líneas horizontales */
+table { border-collapse: collapse; width: 100%; }
+th { background: #fff !important; color: #000 !important; border-top: 1pt solid #000; border-bottom: 1pt solid #000; text-transform: none !important; letter-spacing: 0 !important; }
+td { border-bottom: .5pt solid #888 !important; background: #fff !important; color: #000 !important; }
+tr.fila-critica td, tr.critica td, tr.destacada td, td.mejor, tr.mejor td { background: #fff !important; font-weight: 700; }
+
+/* Elementos de edición no se imprimen */
+.no-print, .topbar, .tabs, .btn, .btn-x, .btn-sm, .toast { display: none !important; }
+input, select, textarea { border: none !important; background: transparent !important; box-shadow: none !important; color: #000 !important; }
+
+.card, table, svg, canvas, figure { break-inside: avoid; page-break-inside: avoid; }
+
+/* Todo el texto en negro (las figuras SVG/canvas conservan su color) */
+body *:not(svg):not(svg *):not(canvas) { color: #000 !important; }
+.card, .container, main { box-sizing: border-box; max-width: 100% !important; width: auto; overflow: visible !important; }
+
+/* Las figuras se ajustan al ancho de la hoja */
+.arbol-scroll, .red-scroll, .gantt-scroll, .grafico, #editorArbol { overflow: visible !important; }
+svg.arbol-svg, svg.red-svg, svg.gantt-svg { max-width: 100% !important; height: auto !important; display: block; }
+canvas { max-width: 100% !important; height: auto !important; }
+html, body { width: auto !important; min-width: 0 !important; }
+.card, table, svg, canvas, figure { break-inside: auto; page-break-inside: auto; }
+.card { break-inside: auto; }
+tr, svg, canvas { break-inside: avoid; page-break-inside: avoid; }
+
+/* Diagramas anchos (árbol, red, Gantt): página horizontal propia */
+@page apaisada { size: A4 landscape; margin: 1.8cm; }
+.card:has(.arbol-scroll), .card:has(.red-scroll), .card:has(.gantt-scroll) { page: apaisada; break-before: page; }
+
+/* En página horizontal el diagrama se ajusta al alto disponible */
+svg.arbol-svg, svg.red-svg, svg.gantt-svg { width: 100% !important; height: 14cm !important; }
+.card:has(.arbol-scroll) { break-inside: avoid; }
