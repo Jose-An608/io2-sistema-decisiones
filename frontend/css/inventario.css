@@ -1,0 +1,2 @@
+/* Estilos del módulo Inventarios */
+.nav a.active { background: var(--inv-soft); color: var(--inv); }

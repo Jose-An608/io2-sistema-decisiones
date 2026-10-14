@@ -1,0 +1,2 @@
+/* Estilos del módulo PERT/CPM */
+.nav a.active { background: var(--pert-soft); color: var(--pert); }

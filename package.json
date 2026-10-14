@@ -1,0 +1,21 @@
+{
+  "name": "io2-sistema-decisiones",
+  "version": "1.0.0",
+  "description": "Sistema de apoyo a la toma de decisiones - Investigación Operativa II (PERT/CPM, Inventarios, Teoría de decisiones)",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "test": "node --test backend/tests"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mssql": "^11.0.1"
+  },
+  "optionalDependencies": {
+    "msnodesqlv8": "^4.4.0"
+  },
+  "license": "ISC"
+}

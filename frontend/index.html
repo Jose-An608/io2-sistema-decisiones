@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Decisiones | IO II</title>
+  <link rel="stylesheet" href="css/base.css">
+  <style>
+    .hero { padding: 36px 0 28px; }
+    .hero h1 { font-size: 2rem; }
+    .hero p { color: var(--ink-soft); max-width: 640px; margin: 0; font-size: 1.05rem; }
+    .modulo { display: flex; flex-direction: column; gap: 10px; border-top: 4px solid var(--c); transition: transform .15s, box-shadow .15s; }
+    .modulo:hover { transform: translateY(-3px); text-decoration: none; }
+    .modulo .ico { width: 44px; height: 44px; border-radius: 10px; background: var(--cs); color: var(--c); display: grid; place-items: center; font-weight: 800; font-size: 1.1rem; }
+    .modulo h2 { font-size: 1.2rem; margin: 6px 0 0; color: var(--ink); }
+    .modulo p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+    .modulo ul { margin: 4px 0 8px; padding-left: 18px; color: var(--ink-soft); font-size: .9rem; }
+    .modulo .ir { margin-top: auto; font-weight: 700; color: var(--c); }
+    .m-pert { --c: var(--pert); --cs: var(--pert-soft); }
+    .m-inv { --c: var(--inv); --cs: var(--inv-soft); }
+    .m-dec { --c: var(--dec); --cs: var(--dec-soft); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">IO</span> Sistema de Decisiones</a>
+      <nav class="nav">
+        <a href="index.html" class="active">Inicio</a>
+        <a href="pages/pert.html">PERT/CPM</a>
+        <a href="pages/inventario.html">Inventarios</a>
+        <a href="pages/decisiones.html">Teoría de decisiones</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Investigación Operativa II</h1>
+      <p>Tres herramientas para decidir mejor: planificar proyectos, controlar inventarios y elegir entre alternativas bajo incertidumbre.</p>
+      <p style="margin-top:14px">
+        <span class="status"><span class="dot" id="dbDot"></span><span id="dbTexto">Comprobando base de datos…</span></span>
+      </p>
+    </section>
+
+    <section class="grid grid-3">
+      <a class="card modulo m-pert" href="pages/pert.html">
+        <div class="ico">P</div>
+        <h2>PERT / CPM</h2>
+        <p>Planificación y control de proyectos.</p>
+        <ul>
+          <li>Ruta crítica y holguras</li>
+          <li>Diagrama de red y Gantt</li>
+          <li>Seguimiento de avance</li>
+        </ul>
+        <span class="ir">Abrir módulo →</span>
+      </a>
+
+      <a class="card modulo m-inv" href="pages/inventario.html">
+        <div class="ico">I</div>
+        <h2>Inventarios</h2>
+        <p>Control y optimización de existencias.</p>
+        <ul>
+          <li>Clasificación ABC</li>
+          <li>EOQ, punto de pedido y stock de seguridad</li>
+          <li>Alertas de stock</li>
+        </ul>
+        <span class="ir">Abrir módulo →</span>
+      </a>
+
+      <a class="card modulo m-dec" href="pages/decisiones.html">
+        <div class="ico">D</div>
+        <h2>Teoría de decisiones</h2>
+        <p>Elección bajo incertidumbre y riesgo.</p>
+        <ul>
+          <li>Maximax, Maximin, Hurwicz, Laplace, Savage</li>
+          <li>Valor monetario esperado</li>
+          <li>Árboles de decisión</li>
+        </ul>
+        <span class="ir">Abrir módulo →</span>
+      </a>
+    </section>
+  </main>
+
+  <script src="js/common/api.js"></script>
+  <script src="js/common/ui.js"></script>
+  <script>
+    // Indicador de conexión con la base de datos
+    (async () => {
+      const dot = document.getElementById('dbDot');
+      const txt = document.getElementById('dbTexto');
+      try {
+        const r = await Api.get('/api/health');
+        dot.className = 'dot ok';
+        txt.textContent = `Base de datos conectada: ${r.baseDatos}`;
+      } catch (e) {
+        dot.className = 'dot fail';
+        txt.textContent = 'Sin conexión con la base de datos';
+      }
+    })();
+  </script>
+</body>
+</html>

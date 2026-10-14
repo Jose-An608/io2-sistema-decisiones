@@ -1,0 +1,2 @@
+/* Estilos del módulo Teoría de decisiones */
+.nav a.active { background: var(--dec-soft); color: var(--dec); }
