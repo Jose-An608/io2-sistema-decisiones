@@ -189,3 +189,53 @@ test('error de base de datos -> 500', async () => {
   assert.equal(r.cuerpo.ok, false);
   dbDisponible = true;
 });
+
+// ---------- Seguimiento ----------
+test('analizar guardado: incluye el seguimiento con el día de corte indicado', async () => {
+  reiniciar();
+  // A(3) al 50 %, B(2) al 0 %; día 3 -> plan 60 %, real 30 %
+  const r = await llamar(c.analizarGuardado, { params: { id: '7' }, query: { dia: '3' } });
+  assert.equal(r.cuerpo.seguimiento.diaCorte, 3);
+  assert.ok(Math.abs(r.cuerpo.seguimiento.avancePlanificado - 60) < 1e-9);
+  assert.ok(Math.abs(r.cuerpo.seguimiento.avanceReal - 30) < 1e-9);
+  assert.equal(r.cuerpo.seguimiento.estado, 'atrasada');
+  const mala = await llamar(c.analizarGuardado, { params: { id: '7' }, query: { dia: '-4' } });
+  assert.equal(mala.codigo, 400);
+});
+
+test('seguimiento: valida antes de tocar la base de datos', async () => {
+  reiniciar();
+  const caso = (avances) => llamar(c.actualizarSeguimiento, { params: { id: '7' }, body: { avances } });
+  assert.equal((await caso(undefined)).codigo, 400);
+  assert.equal((await caso({})).codigo, 400);
+  assert.match((await caso({ A: { avanceReal: 120 } })).cuerpo.error, /entre 0 y 100/);
+  assert.match((await caso({ A: { avanceReal: '' } })).cuerpo.error, /entre 0 y 100/);
+  assert.match((await caso({ A: { avanceReal: 10, inicioReal: '2026/11/02' } })).cuerpo.error, /AAAA-MM-DD/);
+  assert.match((await caso({ A: { avanceReal: 10, inicioReal: '2026-11-05', finReal: '2026-11-02' } })).cuerpo.error, /anterior/);
+  assert.equal(log.consultas.length, 0);
+});
+
+test('seguimiento: actividad inexistente -> 400 y se revierte', async () => {
+  reiniciar();
+  const r = await llamar(c.actualizarSeguimiento, { params: { id: '7' }, body: { avances: { Z: { avanceReal: 10 } } } });
+  assert.equal(r.codigo, 400);
+  assert.match(r.cuerpo.error, /no existe/);
+  assert.equal(log.rollback, 1);
+  assert.equal(log.commit, 0);
+});
+
+test('seguimiento: guarda el avance en una transacción', async () => {
+  reiniciar();
+  const r = await llamar(c.actualizarSeguimiento, { params: { id: '7' }, body: { avances: { A: { avanceReal: 80, inicioReal: '2026-11-02' }, B: { avanceReal: 0 } } } });
+  assert.equal(r.codigo, 200);
+  assert.equal(r.cuerpo.actualizadas, 2);
+  assert.equal(log.consultas.filter((q) => /UPDATE dbo\.Actividad_Pert/.test(q)).length, 2);
+  assert.equal(log.commit, 1);
+});
+
+test('seguimiento: proyecto inexistente -> 404', async () => {
+  reiniciar(); proyectoExiste = false;
+  const r = await llamar(c.actualizarSeguimiento, { params: { id: '99' }, body: { avances: { A: { avanceReal: 10 } } } });
+  assert.equal(r.codigo, 404);
+  assert.equal(log.rollback, 1);
+});

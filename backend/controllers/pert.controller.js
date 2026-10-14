@@ -4,6 +4,7 @@
 // =====================================================
 const { sql, getPool } = require('../config/db');
 const cpm = require('../services/cpm');
+const { evaluarSeguimiento } = require('../services/seguimiento');
 
 class ErrorValidacion extends Error {}
 class ErrorNoEncontrado extends Error {}
@@ -144,6 +145,19 @@ async function cargarProyecto(pool, id) {
   };
 }
 
+// Día de corte del seguimiento: el indicado, o los días transcurridos desde la fecha de inicio (si existe)
+function diaDeCorte(dia, fechaInicio) {
+  if (dia !== undefined && dia !== null && dia !== '') {
+    const n = Number(dia);
+    if (!Number.isFinite(n) || n < 0) throw new ErrorValidacion('El día de corte debe ser un número mayor o igual que 0.');
+    return n;
+  }
+  if (!fechaInicio) return null;
+  const hoy = new Date().toISOString().slice(0, 10);
+  const dias = Math.floor((Date.parse(`${hoy}T00:00:00Z`) - Date.parse(`${fechaInicio}T00:00:00Z`)) / 86400000);
+  return Math.max(0, dias);
+}
+
 // ================= ENDPOINTS =================
 exports.listar = ruta(async (req, res) => {
   const pool = await getPool();
@@ -199,6 +213,8 @@ exports.analizarGuardado = ruta(async (req, res) => {
   const salida = enriquecer(analisis, { fechaInicio: proyecto.fechaInicio, plazo: req.query.plazo, probabilidad: req.query.probabilidad });
   salida.proyecto = { id: proyecto.id, nombre: proyecto.nombre, descripcion: proyecto.descripcion };
   salida.avances = Object.fromEntries(proyecto.actividades.map((a) => [a.id, { avanceReal: a.avanceReal, inicioReal: a.inicioReal, finReal: a.finReal }]));
+  const dia = diaDeCorte(req.query.dia, proyecto.fechaInicio);
+  salida.seguimiento = validando(() => evaluarSeguimiento(analisis, Object.fromEntries(proyecto.actividades.map((a) => [a.id, a.avanceReal])), dia));
   res.json(salida);
 });
 
@@ -241,4 +257,45 @@ exports.eliminar = ruta(async (req, res) => {
   const r = await pool.request().input('id', sql.Int, id).query('DELETE FROM dbo.Proyecto WHERE IdProyecto = @id');
   if (!r.rowsAffected[0]) throw new ErrorNoEncontrado('Proyecto no encontrado.');
   res.json({ ok: true });
+});
+
+// Registra el avance real: { avances: { A: { avanceReal: 50, inicioReal: '2026-11-02', finReal: null }, ... } }
+exports.actualizarSeguimiento = ruta(async (req, res) => {
+  const id = leerId(req);
+  const avances = req.body && req.body.avances;
+  if (!avances || typeof avances !== 'object' || Array.isArray(avances) || Object.keys(avances).length === 0) {
+    throw new ErrorValidacion('Indica el avance de al menos una actividad.');
+  }
+  const datos = Object.entries(avances).map(([codigo, v]) => {
+    if (!v || typeof v !== 'object') throw new ErrorValidacion(`El avance de "${codigo}" no es válido.`);
+    const avance = Number(v.avanceReal);
+    if (v.avanceReal === '' || v.avanceReal === null || v.avanceReal === undefined || !Number.isFinite(avance) || avance < 0 || avance > 100) {
+      throw new ErrorValidacion(`El avance de "${codigo}" debe estar entre 0 y 100.`);
+    }
+    const inicio = leerFecha(v.inicioReal, `El inicio real de "${codigo}"`);
+    const fin = leerFecha(v.finReal, `El fin real de "${codigo}"`);
+    if (inicio && fin && fin < inicio) throw new ErrorValidacion(`En "${codigo}" el fin real no puede ser anterior al inicio real.`);
+    return { codigo, avance, inicio, fin };
+  });
+
+  const pool = await getPool();
+  const tx = new sql.Transaction(pool);
+  await tx.begin();
+  try {
+    const existentes = await new sql.Request(tx).input('id', sql.Int, id)
+      .query('SELECT Codigo, AvanceReal, InicioReal, FinReal FROM dbo.Actividad_Pert WHERE IdProyecto = @id');
+    if (!existentes.recordset.length) throw new ErrorNoEncontrado('Proyecto no encontrado.');
+    const codigos = new Set(existentes.recordset.map((a) => a.Codigo));
+    for (const d of datos) {
+      if (!codigos.has(d.codigo)) throw new ErrorValidacion(`La actividad "${d.codigo}" no existe en este proyecto.`);
+      await new sql.Request(tx).input('id', sql.Int, id).input('c', sql.NVarChar(20), d.codigo)
+        .input('av', sql.Decimal(5, 2), d.avance).input('ini', sql.Date, d.inicio).input('fin', sql.Date, d.fin)
+        .query('UPDATE dbo.Actividad_Pert SET AvanceReal=@av, InicioReal=@ini, FinReal=@fin WHERE IdProyecto=@id AND Codigo=@c');
+    }
+    await tx.commit();
+    res.json({ ok: true, actualizadas: datos.length });
+  } catch (err) {
+    try { await tx.rollback(); } catch (_) { /* ya cerrada */ }
+    throw err;
+  }
 });
