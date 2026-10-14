@@ -70,6 +70,10 @@ npm install
 
 4. Abrir **http://localhost:3000**. Comprobación rápida de la API: http://localhost:3000/api/health
 
+## Despliegue en la nube
+
+El proyecto incluye `render.yaml` para desplegar la aplicación en **Render** con la base de datos en **Azure SQL**. Guía paso a paso: [`docs/despliegue.md`](docs/despliegue.md). Para cargar los datos en la nube se usa `database/cloud_todo_en_uno.sql`.
+
 ## Pruebas
 
 ```bash

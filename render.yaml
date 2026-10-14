@@ -1,0 +1,26 @@
+# Blueprint de Render (https://render.com/docs/blueprint-spec)
+services:
+  - type: web
+    name: io2-sistema-decisiones
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=optional
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DB_AUTH
+        value: sql
+      - key: DB_SERVER
+        sync: false      # ej.: mi-servidor.database.windows.net
+      - key: DB_NAME
+        value: IO2_Sistema
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+      - key: DB_PORT
+        value: 1433
+      - key: DB_ENCRYPT
+        value: true

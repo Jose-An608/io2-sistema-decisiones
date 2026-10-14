@@ -17,5 +17,8 @@
   "optionalDependencies": {
     "msnodesqlv8": "^4.4.0"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": ">=18"
+  }
 }

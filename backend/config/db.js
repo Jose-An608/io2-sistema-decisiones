@@ -35,7 +35,16 @@ if (modoWindows) {
     database: baseDatos,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
-    options: { encrypt: true, trustServerCertificate: true },
+    port: Number(process.env.DB_PORT) || 1433,
+    // En la nube (Azure SQL) la conexión debe ir cifrada
+    options: {
+      encrypt: (process.env.DB_ENCRYPT || 'true').toLowerCase() !== 'false',
+      trustServerCertificate: (process.env.DB_TRUST_CERT || 'true').toLowerCase() !== 'false',
+    },
+    // Azure SQL serverless se pausa por inactividad: la primera conexión puede tardar ~1 minuto
+    connectionTimeout: 60000,
+    requestTimeout: 60000,
+    pool: { max: 10, min: 0, idleTimeoutMillis: 30000 },
   };
 }
 
