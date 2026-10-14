@@ -141,4 +141,10 @@ Los resultados se contrastaron con cálculos manuales (casos clásicos: Thompson
 
 ## Autor
 
-Proyecto académico individual. Datos de autor y docente en el informe técnico.
+Proyecto académico grupal · Investigación Operativa II · Docente: MSc. Manuel Yuri Apaza Valencia.
+
+- Dante Vicente Alvarez Tapia
+- Alexander Fermin Chicalla Garcia
+- Cristian Chura Peralta
+- Jose Antonio Vilcanqui Chambi
+- Brayhan Deyvid Quispe Cama
