@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "node --watch backend/server.js",
-    "test": "node --test backend/tests"
+    "test": "node --test \"backend/tests/*.test.js\""
   },
   "dependencies": {
     "cors": "^2.8.5",
