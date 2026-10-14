@@ -53,7 +53,14 @@ let poolPromise = null;
 // Devuelve el pool (lo crea la primera vez). Si falla, permite reintentar.
 function getPool() {
   if (!poolPromise) {
-    poolPromise = new sql.ConnectionPool(config)
+    const pool = new sql.ConnectionPool(config);
+    // Un error en el pool (por ejemplo, Azure corta la conexión al pausar la BD)
+    // no debe tumbar el servidor: se registra y se vuelve a conectar en la siguiente petición.
+    pool.on('error', (err) => {
+      console.error('Error del pool de conexiones:', err.message);
+      poolPromise = null;
+    });
+    poolPromise = pool
       .connect()
       .catch((err) => {
         poolPromise = null;
