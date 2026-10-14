@@ -57,3 +57,38 @@ CREATE TABLE dbo.Pago (
     CONSTRAINT PK_Pago PRIMARY KEY (IdAlternativa, IdEstado)
 );
 GO
+
+-- ---------- Árboles de decisión ----------
+
+-- Un árbol = un problema de decisión secuencial
+IF OBJECT_ID(N'dbo.ArbolDecision', N'U') IS NULL
+CREATE TABLE dbo.ArbolDecision (
+    IdArbol        INT IDENTITY(1,1) CONSTRAINT PK_ArbolDecision PRIMARY KEY,
+    Nombre         NVARCHAR(150) NOT NULL,
+    Descripcion    NVARCHAR(500) NULL,
+    Tipo           VARCHAR(10)   NOT NULL
+                   CONSTRAINT CK_Arbol_Tipo CHECK (Tipo IN ('beneficio', 'costo')),
+    FechaCreacion  DATETIME2     NOT NULL CONSTRAINT DF_Arbol_Fecha DEFAULT SYSDATETIME()
+);
+GO
+
+-- Nodos del árbol. Los campos EtiquetaRama, ValorRama y Probabilidad describen
+-- la rama que llega a este nodo desde su padre (IdPadre NULL = nodo raíz).
+IF OBJECT_ID(N'dbo.NodoArbol', N'U') IS NULL
+CREATE TABLE dbo.NodoArbol (
+    IdNodo         INT IDENTITY(1,1) CONSTRAINT PK_NodoArbol PRIMARY KEY,
+    IdArbol        INT NOT NULL
+                   CONSTRAINT FK_Nodo_Arbol REFERENCES dbo.ArbolDecision(IdArbol) ON DELETE CASCADE,
+    IdPadre        INT NULL
+                   CONSTRAINT FK_Nodo_Padre REFERENCES dbo.NodoArbol(IdNodo),
+    Tipo           VARCHAR(10)   NOT NULL
+                   CONSTRAINT CK_Nodo_Tipo CHECK (Tipo IN ('decision', 'azar', 'terminal')),
+    Etiqueta       NVARCHAR(100) NOT NULL,
+    Pago           DECIMAL(18,4) NULL,            -- solo nodos terminales
+    EtiquetaRama   NVARCHAR(100) NULL,
+    ValorRama      DECIMAL(18,4) NOT NULL CONSTRAINT DF_Nodo_ValorRama DEFAULT 0,
+    Probabilidad   DECIMAL(9,8)  NULL
+                   CONSTRAINT CK_Nodo_Prob CHECK (Probabilidad BETWEEN 0 AND 1),
+    Orden          INT NOT NULL
+);
+GO

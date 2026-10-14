@@ -4,6 +4,7 @@
 // =====================================================
 const { sql, getPool } = require('../config/db');
 const criterios = require('../services/criterios');
+const arbolDecision = require('../services/arbolDecision');
 
 class ErrorValidacion extends Error {}
 class ErrorNoEncontrado extends Error {}
@@ -268,4 +269,178 @@ const calcular = ruta(async (req, res) => {
   res.json(ejecutarAnalisis(validarPayload(req.body)));
 });
 
-module.exports = { listar, obtener, crear, actualizar, eliminar, analizarGuardada, calcular };
+// ---------- Árboles de decisión ----------
+
+// Valida el cuerpo de la petición de un árbol: { nombre, descripcion?, tipo, arbol }
+function validarPayloadArbol(body) {
+  try {
+    if (!body || typeof body !== 'object') throw new Error('Cuerpo de la petición vacío.');
+    const nombre = String(body.nombre ?? '').trim();
+    if (!nombre || nombre.length > 150) throw new Error('El nombre es obligatorio (máximo 150 caracteres).');
+    const descripcion = body.descripcion ? String(body.descripcion).trim() : null;
+    if (descripcion && descripcion.length > 500) throw new Error('La descripción admite máximo 500 caracteres.');
+    const tipo = body.tipo ?? 'beneficio';
+    criterios.validarTipo(tipo);
+    return { nombre, descripcion, tipo, arbol: arbolDecision.normalizarArbol(body.arbol) };
+  } catch (err) {
+    if (err instanceof ErrorValidacion) throw err;
+    throw new ErrorValidacion(err.message);
+  }
+}
+
+// Inserta un nodo y, recursivamente, sus hijos (dentro de una transacción)
+async function insertarNodo(tx, idArbol, nodo, idPadre, rama, orden) {
+  const r = await new sql.Request(tx)
+    .input('arbol', sql.Int, idArbol)
+    .input('padre', sql.Int, idPadre)
+    .input('tipo', sql.VarChar(10), nodo.tipo)
+    .input('etiqueta', sql.NVarChar(100), nodo.etiqueta)
+    .input('pago', sql.Decimal(18, 4), nodo.tipo === 'terminal' ? nodo.pago : null)
+    .input('etRama', sql.NVarChar(100), rama ? rama.etiqueta : null)
+    .input('valRama', sql.Decimal(18, 4), rama ? rama.valorRama : 0)
+    .input('prob', sql.Decimal(9, 8), rama && rama.probabilidad !== null ? rama.probabilidad : null)
+    .input('orden', sql.Int, orden)
+    .query(`INSERT INTO dbo.NodoArbol (IdArbol, IdPadre, Tipo, Etiqueta, Pago, EtiquetaRama, ValorRama, Probabilidad, Orden)
+            OUTPUT INSERTED.IdNodo
+            VALUES (@arbol, @padre, @tipo, @etiqueta, @pago, @etRama, @valRama, @prob, @orden)`);
+  const id = r.recordset[0].IdNodo;
+  for (let i = 0; i < nodo.ramas.length; i++) {
+    await insertarNodo(tx, idArbol, nodo.ramas[i].nodo, id, nodo.ramas[i], i);
+  }
+  return id;
+}
+
+// Lee un árbol y reconstruye su estructura anidada desde las filas planas
+async function cargarArbol(id) {
+  const pool = await getPool();
+  const pedir = (texto) => pool.request().input('id', sql.Int, id).query(texto);
+  const cab = await pedir('SELECT IdArbol, Nombre, Descripcion, Tipo, FechaCreacion FROM dbo.ArbolDecision WHERE IdArbol = @id');
+  if (cab.recordset.length === 0) throw new ErrorNoEncontrado('No existe el árbol solicitado.');
+  const filas = await pedir(
+    `SELECT IdNodo, IdPadre, Tipo, Etiqueta, Pago, EtiquetaRama, ValorRama, Probabilidad
+     FROM dbo.NodoArbol WHERE IdArbol = @id ORDER BY Orden, IdNodo`);
+
+  const porId = new Map();
+  filas.recordset.forEach((f) => {
+    const n = { tipo: f.Tipo, etiqueta: f.Etiqueta, ramas: [] };
+    if (f.Tipo === 'terminal') n.pago = Number(f.Pago);
+    porId.set(f.IdNodo, n);
+  });
+  let raiz = null;
+  filas.recordset.forEach((f) => {
+    const n = porId.get(f.IdNodo);
+    if (f.IdPadre === null) { raiz = n; return; }
+    porId.get(f.IdPadre).ramas.push({
+      etiqueta: f.EtiquetaRama,
+      valorRama: Number(f.ValorRama),
+      probabilidad: f.Probabilidad === null ? null : Number(f.Probabilidad),
+      nodo: n,
+    });
+  });
+  if (!raiz) throw new Error('El árbol guardado no tiene nodo raíz.');
+
+  const c = cab.recordset[0];
+  return {
+    id: c.IdArbol, nombre: c.Nombre, descripcion: c.Descripcion,
+    tipo: c.Tipo, fechaCreacion: c.FechaCreacion, arbol: raiz,
+  };
+}
+
+const listarArboles = ruta(async (req, res) => {
+  const pool = await getPool();
+  const r = await pool.request().query(
+    `SELECT a.IdArbol, a.Nombre, a.Tipo, a.FechaCreacion,
+            (SELECT COUNT(*) FROM dbo.NodoArbol WHERE IdArbol = a.IdArbol) AS NumNodos
+     FROM dbo.ArbolDecision a ORDER BY a.FechaCreacion DESC, a.IdArbol DESC`);
+  res.json(r.recordset.map((x) => ({
+    id: x.IdArbol, nombre: x.Nombre, tipo: x.Tipo, fechaCreacion: x.FechaCreacion, numNodos: x.NumNodos,
+  })));
+});
+
+const obtenerArbol = ruta(async (req, res) => {
+  res.json(await cargarArbol(leerId(req)));
+});
+
+// Evalúa un árbol sin guardarlo
+const calcularArbol = ruta(async (req, res) => {
+  const b = req.body && typeof req.body === 'object' ? { ...req.body, nombre: req.body.nombre || 'Sin título' } : req.body;
+  const d = validarPayloadArbol(b);
+  res.json(arbolDecision.evaluarArbol(d.arbol, d.tipo));
+});
+
+// Árbol de ejemplo resuelto a mano (para cargarlo en el editor)
+const ejemploArbol = ruta(async (req, res) => {
+  res.json({
+    nombre: 'Ejemplo: estudio de mercado (Thompson Lumber)',
+    descripcion: '¿Conviene pagar 10 000 por un estudio de mercado antes de elegir el tamaño de la planta?',
+    tipo: 'beneficio',
+    arbol: arbolDecision.ejemploThompson(),
+  });
+});
+
+const crearArbol = ruta(async (req, res) => {
+  const d = validarPayloadArbol(req.body);
+  const pool = await getPool();
+  const tx = new sql.Transaction(pool);
+  await tx.begin();
+  try {
+    const r = await new sql.Request(tx)
+      .input('nombre', sql.NVarChar(150), d.nombre)
+      .input('desc', sql.NVarChar(500), d.descripcion)
+      .input('tipo', sql.VarChar(10), d.tipo)
+      .query('INSERT INTO dbo.ArbolDecision (Nombre, Descripcion, Tipo) OUTPUT INSERTED.IdArbol VALUES (@nombre, @desc, @tipo)');
+    const id = r.recordset[0].IdArbol;
+    await insertarNodo(tx, id, d.arbol, null, null, 0);
+    await tx.commit();
+    res.status(201).json({ ok: true, id });
+  } catch (err) {
+    await tx.rollback();
+    throw err;
+  }
+});
+
+const actualizarArbol = ruta(async (req, res) => {
+  const id = leerId(req);
+  const d = validarPayloadArbol(req.body);
+  const pool = await getPool();
+  const tx = new sql.Transaction(pool);
+  await tx.begin();
+  try {
+    const r = await new sql.Request(tx)
+      .input('id', sql.Int, id)
+      .input('nombre', sql.NVarChar(150), d.nombre)
+      .input('desc', sql.NVarChar(500), d.descripcion)
+      .input('tipo', sql.VarChar(10), d.tipo)
+      .query('UPDATE dbo.ArbolDecision SET Nombre = @nombre, Descripcion = @desc, Tipo = @tipo WHERE IdArbol = @id');
+    if (r.rowsAffected[0] === 0) throw new ErrorNoEncontrado('No existe el árbol solicitado.');
+    await new sql.Request(tx).input('id', sql.Int, id).query('DELETE FROM dbo.NodoArbol WHERE IdArbol = @id');
+    await insertarNodo(tx, id, d.arbol, null, null, 0);
+    await tx.commit();
+    res.json({ ok: true, id });
+  } catch (err) {
+    await tx.rollback();
+    throw err;
+  }
+});
+
+const eliminarArbol = ruta(async (req, res) => {
+  const id = leerId(req);
+  const pool = await getPool();
+  const tx = new sql.Transaction(pool);
+  await tx.begin();
+  try {
+    await new sql.Request(tx).input('id', sql.Int, id).query('DELETE FROM dbo.NodoArbol WHERE IdArbol = @id');
+    const r = await new sql.Request(tx).input('id', sql.Int, id).query('DELETE FROM dbo.ArbolDecision WHERE IdArbol = @id');
+    if (r.rowsAffected[0] === 0) throw new ErrorNoEncontrado('No existe el árbol solicitado.');
+    await tx.commit();
+    res.json({ ok: true });
+  } catch (err) {
+    await tx.rollback();
+    throw err;
+  }
+});
+
+module.exports = {
+  listar, obtener, crear, actualizar, eliminar, analizarGuardada, calcular,
+  listarArboles, obtenerArbol, calcularArbol, ejemploArbol, crearArbol, actualizarArbol, eliminarArbol,
+};

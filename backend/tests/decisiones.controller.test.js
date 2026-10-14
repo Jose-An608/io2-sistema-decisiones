@@ -120,3 +120,56 @@ test('crear valida antes de abrir la base de datos', async () => {
   const r = await llamar(c.crear, { body: b });
   assert.equal(r.codigo, 400);
 });
+
+// ---------------------------------------------------------
+// Árboles de decisión
+// ---------------------------------------------------------
+const arbolSvc = require('../services/arbolDecision');
+
+test('árbol: ejemplo devuelve el árbol de Thompson Lumber', async () => {
+  const r = await llamar(c.ejemploArbol, {});
+  assert.equal(r.codigo, 200);
+  assert.equal(r.cuerpo.tipo, 'beneficio');
+  assert.equal(r.cuerpo.arbol.tipo, 'decision');
+});
+
+test('árbol: calcular evalúa el ejemplo (49 200) y no exige nombre', async () => {
+  const r = await llamar(c.calcularArbol, { body: { tipo: 'beneficio', arbol: arbolSvc.ejemploThompson() } });
+  assert.equal(r.codigo, 200);
+  assert.ok(Math.abs(r.cuerpo.valorEsperado - 49200) < 1e-6);
+  assert.equal(r.cuerpo.politica[0].eleccion, 'Realizar estudio');
+});
+
+test('árbol: calcular con costos minimiza', async () => {
+  const t = (pago) => ({ tipo: 'terminal', etiqueta: '', pago, ramas: [] });
+  const r = await llamar(c.calcularArbol, { body: { tipo: 'costo', arbol: {
+    tipo: 'decision', etiqueta: 'D', ramas: [{ etiqueta: 'A', nodo: t(10) }, { etiqueta: 'B', nodo: t(4) }],
+  } } });
+  assert.equal(r.codigo, 200);
+  assert.equal(r.cuerpo.valorEsperado, 4);
+});
+
+test('árbol: validaciones devuelven HTTP 400', async () => {
+  const t = (pago) => ({ tipo: 'terminal', etiqueta: '', pago, ramas: [] });
+  const casos = [
+    [{ tipo: 'beneficio' }, /Falta un nodo/],
+    [{ tipo: 'otro', arbol: t(1) }, /beneficio.*costo/],
+    [{ tipo: 'beneficio', arbol: { tipo: 'azar', etiqueta: 'E', ramas: [
+      { etiqueta: 'a', probabilidad: 0.7, nodo: t(1) }, { etiqueta: 'b', probabilidad: 0.7, nodo: t(2) }] } }, /deben sumar 1/],
+    [{ tipo: 'beneficio', arbol: { tipo: 'decision', etiqueta: 'D', ramas: [{ etiqueta: 'a', nodo: t('x') }, { etiqueta: 'b', nodo: t(2) }] } }, /pago numérico/],
+  ];
+  for (const [body, patron] of casos) {
+    const r = await llamar(c.calcularArbol, { body });
+    assert.equal(r.codigo, 400, `debía ser 400 para ${patron}`);
+    assert.match(r.cuerpo.error, patron);
+  }
+});
+
+test('árbol: crear valida antes de abrir la base y obtener rechaza ids inválidos', async () => {
+  const r1 = await llamar(c.crearArbol, { body: { nombre: '', tipo: 'beneficio', arbol: arbolSvc.ejemploThompson() } });
+  assert.equal(r1.codigo, 400);
+  const r2 = await llamar(c.obtenerArbol, { params: { id: 'abc' } });
+  assert.equal(r2.codigo, 400);
+  const r3 = await llamar(c.eliminarArbol, { params: { id: '0' } });
+  assert.equal(r3.codigo, 400);
+});

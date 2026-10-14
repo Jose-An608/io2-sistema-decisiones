@@ -22,88 +22,157 @@
 
   <main class="container">
     <h1 class="page-title">Teoría de decisiones</h1>
-    <p class="page-sub">Registra alternativas y estados de la naturaleza, completa la matriz de pagos y compara los criterios de decisión.</p>
+    <p class="page-sub">Compara criterios con una matriz de pagos o resuelve decisiones secuenciales con un árbol.</p>
 
-    <!-- Barra de decisiones guardadas -->
-    <section class="card toolbar no-print">
-      <div class="toolbar-select">
-        <label for="selDecisiones">Decisión guardada</label>
-        <select id="selDecisiones"></select>
-      </div>
-      <div class="toolbar-botones">
-        <button type="button" class="btn btn-ghost" id="btnNueva">Nueva</button>
-        <button type="button" class="btn" id="btnGuardar">Guardar</button>
-        <button type="button" class="btn btn-ghost" id="btnImprimir">Imprimir informe</button>
-        <button type="button" class="btn btn-danger" id="btnEliminar">Eliminar</button>
-      </div>
-    </section>
+    <div class="tabs no-print" role="tablist">
+      <button type="button" class="tab activa" data-tab="matriz" role="tab">Matriz de pagos</button>
+      <button type="button" class="tab" data-tab="arbol" role="tab">Árbol de decisión</button>
+    </div>
 
-    <!-- Datos generales -->
-    <section class="card seccion">
-      <h2>1. Problema</h2>
-      <div class="form-row">
-        <div class="campo-ancho">
-          <label for="nombre">Nombre de la decisión</label>
-          <input type="text" id="nombre" maxlength="150" placeholder="Ej.: Tamaño de la planta">
+    <!-- =============== VISTA 1: MATRIZ DE PAGOS =============== -->
+    <div id="vistaMatriz">
+      <section class="card toolbar no-print">
+        <div class="toolbar-select">
+          <label for="selDecisiones">Decisión guardada</label>
+          <select id="selDecisiones"></select>
         </div>
-        <div>
-          <label for="tipo">Los pagos son</label>
-          <select id="tipo">
-            <option value="beneficio">Beneficios (mayor es mejor)</option>
-            <option value="costo">Costos (menor es mejor)</option>
-          </select>
+        <div class="toolbar-botones">
+          <button type="button" class="btn btn-ghost" id="btnNueva">Nueva</button>
+          <button type="button" class="btn" id="btnGuardar">Guardar</button>
+          <button type="button" class="btn btn-ghost" id="btnImprimir">Imprimir informe</button>
+          <button type="button" class="btn btn-danger" id="btnEliminar">Eliminar</button>
         </div>
-        <div>
-          <label for="alfa">Coeficiente de optimismo α (Hurwicz): <strong id="alfaTexto">0.50</strong></label>
-          <input type="range" id="alfa" min="0" max="1" step="0.05" value="0.5">
-        </div>
-      </div>
-      <label for="descripcion">Descripción (opcional)</label>
-      <input type="text" id="descripcion" maxlength="500" placeholder="Describe brevemente el problema">
-    </section>
+      </section>
 
-    <!-- Matriz de pagos -->
-    <section class="card seccion">
-      <h2>2. Matriz de pagos</h2>
-      <p class="ayuda">Filas = alternativas. Columnas = estados de la naturaleza. Las probabilidades son opcionales: si las ingresas (deben sumar 1) se calcula también el VME y el VEIP.</p>
-      <div id="editorMatriz"></div>
-      <div class="acciones-matriz no-print">
-        <button type="button" class="btn btn-ghost btn-sm" data-accion="add-alt" id="btnAddAlt">+ Alternativa</button>
-      </div>
-    </section>
-
-    <!-- Resultados -->
-    <section class="seccion">
-      <h2>3. Resultados</h2>
-      <p class="solo-impresion" id="infoImpresion"></p>
-      <div id="mensajeResultados"></div>
-
-      <div id="resultados" hidden>
-        <div class="card recomendacion" id="recomendacion"></div>
-
-        <div class="card seccion-interna">
-          <h3>Comparación de criterios</h3>
-          <div id="tablaCriterios"></div>
-          <p class="ayuda" id="notaCriterios"></p>
-        </div>
-
-        <div class="grid grid-2">
-          <div class="card">
-            <h3>Matriz de arrepentimiento (Savage)</h3>
-            <div id="tablaArrepentimiento"></div>
+      <section class="card seccion">
+        <h2>1. Problema</h2>
+        <div class="form-row">
+          <div class="campo-ancho">
+            <label for="nombre">Nombre de la decisión</label>
+            <input type="text" id="nombre" maxlength="150" placeholder="Ej.: Tamaño de la planta">
           </div>
-          <div class="card">
-            <h3>Información perfecta</h3>
-            <div id="bloqueVeip"></div>
+          <div>
+            <label for="tipo">Los pagos son</label>
+            <select id="tipo">
+              <option value="beneficio">Beneficios (mayor es mejor)</option>
+              <option value="costo">Costos (menor es mejor)</option>
+            </select>
+          </div>
+          <div>
+            <label for="alfa">Coeficiente de optimismo α (Hurwicz): <strong id="alfaTexto">0.50</strong></label>
+            <input type="range" id="alfa" min="0" max="1" step="0.05" value="0.5">
           </div>
         </div>
+        <label for="descripcion">Descripción (opcional)</label>
+        <input type="text" id="descripcion" maxlength="500" placeholder="Describe brevemente el problema">
+      </section>
 
-        <div class="grid grid-2 graficos">
-          <div class="card"><div class="grafico"><canvas id="grafVotos"></canvas></div></div>
-          <div class="card"><div class="grafico"><canvas id="grafValor"></canvas></div></div>
+      <section class="card seccion">
+        <h2>2. Matriz de pagos</h2>
+        <p class="ayuda">Filas = alternativas. Columnas = estados de la naturaleza. Las probabilidades son opcionales: si las ingresas (deben sumar 1) se calcula también el VME y el VEIP.</p>
+        <div id="editorMatriz"></div>
+        <div class="acciones-matriz no-print">
+          <button type="button" class="btn btn-ghost btn-sm" data-accion="add-alt" id="btnAddAlt">+ Alternativa</button>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <section class="seccion">
+        <h2>3. Resultados</h2>
+        <p class="solo-impresion" id="infoImpresion"></p>
+        <div id="mensajeResultados"></div>
+
+        <div id="resultados" hidden>
+          <div class="card recomendacion" id="recomendacion"></div>
+
+          <div class="card seccion-interna">
+            <h3>Comparación de criterios</h3>
+            <div id="tablaCriterios"></div>
+            <p class="ayuda" id="notaCriterios"></p>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="card">
+              <h3>Matriz de arrepentimiento (Savage)</h3>
+              <div id="tablaArrepentimiento"></div>
+            </div>
+            <div class="card">
+              <h3>Información perfecta</h3>
+              <div id="bloqueVeip"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-2 graficos">
+            <div class="card"><div class="grafico"><canvas id="grafVotos"></canvas></div></div>
+            <div class="card"><div class="grafico"><canvas id="grafValor"></canvas></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- =============== VISTA 2: ÁRBOL DE DECISIÓN =============== -->
+    <div id="vistaArbol" hidden>
+      <section class="card toolbar no-print">
+        <div class="toolbar-select">
+          <label for="selArboles">Árbol guardado</label>
+          <select id="selArboles"></select>
+        </div>
+        <div class="toolbar-botones">
+          <button type="button" class="btn btn-ghost" id="btnArbolNuevo">Nuevo</button>
+          <button type="button" class="btn btn-ghost" id="btnArbolDesdeMatriz">Generar desde la matriz</button>
+          <button type="button" class="btn btn-ghost" id="btnArbolEjemplo">Cargar ejemplo</button>
+          <button type="button" class="btn" id="btnArbolGuardar">Guardar</button>
+          <button type="button" class="btn btn-ghost" id="btnArbolImprimir">Imprimir informe</button>
+          <button type="button" class="btn btn-danger" id="btnArbolEliminar">Eliminar</button>
+        </div>
+      </section>
+
+      <section class="card seccion">
+        <h2>1. Árbol</h2>
+        <div class="form-row">
+          <div class="campo-ancho">
+            <label for="arbolNombre">Nombre del árbol</label>
+            <input type="text" id="arbolNombre" maxlength="150" placeholder="Ej.: ¿Realizar un estudio de mercado?">
+          </div>
+          <div>
+            <label for="arbolTipo">Los valores son</label>
+            <select id="arbolTipo">
+              <option value="beneficio">Beneficios (se elige el mayor)</option>
+              <option value="costo">Costos (se elige el menor)</option>
+            </select>
+          </div>
+        </div>
+        <label for="arbolDescripcion">Descripción (opcional)</label>
+        <input type="text" id="arbolDescripcion" maxlength="500" placeholder="Describe brevemente el problema">
+
+        <div class="alert alert-ok ayuda-modos no-print">Dos formas de crear el árbol: <strong>Generar desde la matriz</strong> (usa los datos de la pestaña Matriz de pagos) o <strong>armarlo a mano</strong> con el editor de abajo.</div>
+        <h3 class="subtitulo">Estructura</h3>
+        <p class="ayuda">
+          <span class="ico ico-decision">■</span> Decisión: tú eliges una rama.
+          <span class="ico ico-azar">●</span> Azar: ocurre una rama según su probabilidad (deben sumar 1).
+          <span class="ico ico-terminal">▶</span> Terminal: resultado final con su pago.
+          El <strong>valor</strong> de una rama es el costo o beneficio de tomarla (en beneficios, un costo va negativo).
+        </p>
+        <div id="editorArbol"></div>
+      </section>
+
+      <section class="seccion">
+        <h2>2. Evaluación</h2>
+        <p class="solo-impresion" id="infoImpresionArbol"></p>
+        <div id="mensajeArbol"></div>
+        <div id="resultadoArbol" hidden>
+          <div class="card recomendacion" id="resumenArbol"></div>
+          <div class="card seccion-interna">
+            <h3>Decisiones óptimas</h3>
+            <div id="politicaArbol"></div>
+          </div>
+          <div class="card">
+            <h3>Diagrama del árbol</h3>
+            <div class="arbol-scroll" id="diagramaArbol"></div>
+            <p class="ayuda">Línea gruesa = rama óptima. Línea punteada con corte = alternativa descartada. El número bajo cada nodo es su valor esperado.</p>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -111,6 +180,9 @@
   <script src="../js/common/ui.js"></script>
   <script src="../js/decisiones/criterios.js"></script>
   <script src="../js/decisiones/matriz.js"></script>
-  <script>document.addEventListener('DOMContentLoaded', () => Matriz.iniciar());</script>
+  <script src="../js/decisiones/arbol.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { Matriz.iniciar(); Arbol.iniciar(); });
+  </script>
 </body>
 </html>

@@ -280,5 +280,10 @@ const Matriz = (() => {
     nueva();
   }
 
-  return { iniciar };
+  // Copia del problema actual (la usa el árbol para generarse desde la matriz)
+  function obtenerEstado() {
+    return JSON.parse(JSON.stringify(estado));
+  }
+
+  return { iniciar, obtenerEstado };
 })();
