@@ -1,2 +1,87 @@
-/* Estilos del módulo PERT/CPM */
+/* =====================================================
+   Estilos del módulo PERT / CPM
+   ===================================================== */
+[hidden] { display: none !important; }
 .nav a.active { background: var(--pert-soft); color: var(--pert); }
+.btn { background: var(--pert); }
+.btn:hover { background: #b83c0a; }
+.btn-ghost { background: transparent; color: var(--pert); }
+.btn-ghost:hover { background: var(--pert-soft); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #a02e22; }
+input:focus, select:focus { outline-color: var(--pert-soft); border-color: var(--pert); }
+
+h2 { font-size: 1.15rem; }
+.seccion { margin-bottom: 20px; }
+.ayuda { color: var(--ink-soft); font-size: .9rem; margin: 0 0 12px; }
+.campo-ancho { grid-column: span 2; }
+.campo-completo { grid-column: 1 / -1; }
+@media (max-width: 640px) { .campo-ancho { grid-column: auto; } }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.solo-impresion { display: none; }
+
+/* ---------- Barra de herramientas ---------- */
+.toolbar { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+.toolbar-select { flex: 1 1 280px; max-width: 460px; }
+.toolbar-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- Editor de actividades ---------- */
+.editor { min-width: 640px; }
+.editor th, .editor td { padding: 6px 8px; vertical-align: middle; text-transform: none; letter-spacing: 0; }
+.editor thead th { background: var(--pert-soft); color: var(--ink); font-size: .85rem; }
+.editor input { padding: 7px 9px; }
+.editor td input.cod { width: 74px; font-weight: 700; text-transform: uppercase; }
+.editor td input.nom { min-width: 170px; }
+.editor td input.tiempo { width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
+.editor td input.pred { min-width: 120px; }
+.btn-x {
+  border: none; background: transparent; color: var(--ink-soft); font-size: 1.2rem; line-height: 1;
+  cursor: pointer; padding: 2px 6px; border-radius: 6px;
+}
+.btn-x:hover { background: #fdecea; color: var(--danger); }
+.acciones-editor { margin-top: 12px; }
+
+/* ---------- Resultados ---------- */
+.recomendacion { border-left: 5px solid var(--pert); background: var(--pert-soft); }
+.recomendacion .titulo { color: var(--pert); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.recomendacion .principal { font-size: 1.4rem; font-weight: 700; margin: 4px 0; }
+.recomendacion p { margin: 0; color: var(--ink-soft); }
+.stats { display: grid; gap: 10px; margin-bottom: 8px; }
+.stat { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.stat:last-child { border-bottom: none; }
+.stat strong { font-variant-numeric: tabular-nums; }
+.consulta { margin-top: 14px; }
+.respuesta { padding: 10px 14px; background: var(--bg); border-radius: 8px; margin-top: 8px; }
+.respuesta strong { color: var(--pert); font-size: 1.1rem; }
+tr.fila-critica td { background: var(--pert-soft); }
+tr.fila-critica td:first-child { font-weight: 700; color: var(--pert); }
+.crit { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .78rem; font-weight: 700; background: var(--pert); color: #fff; }
+.hol { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .78rem; font-weight: 700; background: #e6e9ef; color: #4a5568; }
+
+/* ---------- Diagrama de red ---------- */
+.red-scroll { overflow-x: auto; padding-bottom: 6px; }
+.red-svg { display: block; }
+.red-svg text { font-family: var(--font); }
+.red-svg .arco { fill: none; stroke: #9aa5b8; stroke-width: 1.6; }
+.red-svg .arco.critico { stroke: var(--pert); stroke-width: 3; }
+.red-svg .punta { fill: #9aa5b8; }
+.red-svg .punta.critico { fill: var(--pert); }
+.red-svg .caja { fill: #fff; stroke: #9aa5b8; stroke-width: 1.6; }
+.red-svg .caja.critica { stroke: var(--pert); stroke-width: 2.6; fill: #fff8f4; }
+.red-svg .sep { stroke: #d5dbe6; stroke-width: 1; }
+.red-svg .t-id { font-size: 15px; font-weight: 700; fill: var(--ink); text-anchor: middle; }
+.red-svg .t-nom { font-size: 10.5px; fill: var(--ink-soft); text-anchor: middle; }
+.red-svg .t-num { font-size: 11.5px; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.red-svg .t-hol { font-size: 10.5px; fill: var(--ink-soft); text-anchor: middle; }
+
+/* ---------- Impresión ---------- */
+@media print {
+  body { background: #fff; }
+  .topbar, .no-print, .btn, .btn-x { display: none !important; }
+  .container { padding: 0; max-width: none; }
+  .card { box-shadow: none; break-inside: avoid; }
+  .solo-impresion { display: block; color: var(--ink-soft); margin: 0 0 12px; }
+  .editor input, #nombre, #descripcion, #modo, #fechaInicio { border: none; background: transparent; padding: 0; appearance: none; }
+  #selProyectos { display: none; }
+  .page-sub { display: none; }
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PERT / CPM | Sistema de Decisiones</title>
+  <title>PERT/CPM | Sistema de Decisiones</title>
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/pert.css">
 </head>
@@ -22,14 +22,81 @@
 
   <main class="container">
     <h1 class="page-title">PERT / CPM</h1>
-    <p class="page-sub">Planificación y control de proyectos: ruta crítica, holguras, red y cronograma.</p>
+    <p class="page-sub">Ruta crítica, holguras y probabilidad de cumplir un plazo para la programación de proyectos.</p>
 
-    <div class="card">
-      <div class="alert alert-warn" style="margin:0">Módulo en construcción.</div>
+    <section class="card toolbar no-print">
+      <div class="toolbar-select">
+        <label for="selProyectos">Proyecto guardado</label>
+        <select id="selProyectos"></select>
+      </div>
+      <div class="toolbar-botones">
+        <button type="button" class="btn btn-ghost" id="btnNuevo">Nuevo</button>
+        <button type="button" class="btn" id="btnGuardar">Guardar</button>
+        <button type="button" class="btn btn-ghost" id="btnImprimir">Imprimir informe</button>
+        <button type="button" class="btn btn-danger" id="btnEliminar">Eliminar</button>
+      </div>
+    </section>
+
+    <section class="card seccion">
+      <h2>1. Proyecto</h2>
+      <div class="form-row">
+        <div class="campo-ancho"><label for="nombre">Nombre del proyecto</label><input type="text" id="nombre" maxlength="150" placeholder="Ej.: Desarrollo del sistema"></div>
+        <div>
+          <label for="modo">Estimación de tiempos</label>
+          <select id="modo">
+            <option value="cpm">CPM: una duración por actividad</option>
+            <option value="pert">PERT: optimista, probable y pesimista</option>
+          </select>
+        </div>
+        <div><label for="fechaInicio">Fecha de inicio (opcional)</label><input type="date" id="fechaInicio"></div>
+      </div>
+      <div class="form-row"><div class="campo-completo"><label for="descripcion">Descripción (opcional)</label><input type="text" id="descripcion" maxlength="500"></div></div>
+      <p class="solo-impresion" id="encabezadoImpresion"></p>
+    </section>
+
+    <section class="card seccion">
+      <h2>2. Actividades</h2>
+      <p class="ayuda">Escribe las predecesoras separadas por coma (por ejemplo <code>A, B</code>). Deja vacío si la actividad puede empezar al inicio. Los resultados se actualizan solos.</p>
+      <div id="editorActividades" class="table-wrap"></div>
+      <div class="acciones-editor no-print"><button type="button" class="btn btn-ghost" id="btnAgregar">+ Agregar actividad</button></div>
+    </section>
+
+    <div id="errorCalculo" class="alert alert-danger" hidden></div>
+
+    <div id="resultados" hidden>
+      <section class="card seccion recomendacion">
+        <div class="titulo">Resultado</div>
+        <div class="principal" id="rcPrincipal"></div>
+        <p id="rcDetalle"></p>
+      </section>
+
+      <section class="card seccion" id="panelPert" hidden>
+        <h2>Probabilidad de cumplir el plazo (PERT)</h2>
+        <div class="stats" id="statsPert"></div>
+        <div class="form-row consulta no-print">
+          <div><label for="plazo">Plazo objetivo (días)</label><input type="number" id="plazo" min="0" step="any" placeholder="ej. 20"></div>
+          <div><label for="probabilidad">Probabilidad deseada (%)</label><input type="number" id="probabilidad" min="1" max="99" step="any" placeholder="ej. 95"></div>
+        </div>
+        <div id="resultadoPlazo"></div>
+      </section>
+
+      <section class="card seccion">
+        <h2>Tiempos, holguras y ruta crítica</h2>
+        <div id="tablaResultados"></div>
+        <p class="ayuda" id="notaTabla" style="margin-top:12px"></p>
+      </section>
+
+      <section class="card seccion">
+        <h2>Diagrama de red</h2>
+        <div id="redContenedor" class="red-scroll"></div>
+        <p class="ayuda" id="notaRed" style="margin-top:12px"></p>
+      </section>
     </div>
   </main>
 
   <script src="../js/common/api.js"></script>
   <script src="../js/common/ui.js"></script>
+  <script src="../js/pert/red.js"></script>
+  <script src="../js/pert/proyectos.js"></script>
 </body>
 </html>
