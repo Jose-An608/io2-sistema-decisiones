@@ -1,2 +1,89 @@
-/* Estilos del módulo Inventarios */
+/* =====================================================
+   Estilos del módulo Inventarios
+   ===================================================== */
+[hidden] { display: none !important; }
 .nav a.active { background: var(--inv-soft); color: var(--inv); }
+.btn { background: var(--inv); }
+.btn:hover { background: #07604a; }
+.btn-ghost { background: transparent; color: var(--inv); }
+.btn-ghost:hover { background: var(--inv-soft); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #a02e22; }
+input:focus, select:focus { outline-color: var(--inv-soft); border-color: var(--inv); }
+
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; margin-bottom: 10px; }
+.seccion { margin-bottom: 20px; }
+.ayuda { color: var(--ink-soft); font-size: .9rem; margin: 0 0 12px; }
+.campo-ancho { grid-column: span 2; }
+@media (max-width: 640px) { .campo-ancho { grid-column: auto; } }
+.botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.alinea-abajo { display: flex; align-items: flex-end; }
+.cab-seccion { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.filtro { width: auto; min-width: 220px; }
+.subtitulo { margin-top: 22px; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- Pestañas ---------- */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 20px; }
+.tab {
+  border: none; background: transparent; font: inherit; font-weight: 700; color: var(--ink-soft);
+  padding: 10px 16px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; border-radius: 8px 8px 0 0;
+}
+.tab:hover { background: var(--inv-soft); color: var(--inv); }
+.tab.activa { color: var(--inv); border-bottom-color: var(--inv); }
+
+/* ---------- Estados de alerta ---------- */
+.badge-info { background: #e8eefc; color: var(--brand); }
+.tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 16px; }
+.tile { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.tile .valor { font-size: 1.45rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.tile .etq { color: var(--ink-soft); font-size: .82rem; }
+.tile .formula { color: var(--ink-soft); font-size: .76rem; margin-top: 2px; font-family: Consolas, monospace; }
+.tile.t-agotado { border-color: #f4c2bc; background: #fdecea; }
+.tile.t-agotado .valor { color: var(--danger); }
+.tile.t-riesgo { border-color: #f4c2bc; background: #fff5f3; }
+.tile.t-riesgo .valor { color: var(--danger); }
+.tile.t-pedir { border-color: #f0d9a0; background: #fdf5e3; }
+.tile.t-pedir .valor { color: var(--warn); }
+.tile.t-en_camino { background: #f1f5fe; }
+.tile.t-en_camino .valor { color: var(--brand); }
+.tile.t-ok { background: #f0faf6; }
+.tile.t-ok .valor { color: var(--ok); }
+.tile.destacado { border-color: var(--inv); background: var(--inv-soft); }
+.tile.destacado .valor { color: var(--inv); }
+tr.fila-agotado td, tr.fila-riesgo td { background: #fff5f3; }
+
+/* ---------- Resultados ---------- */
+.recomendacion { border-left: 5px solid var(--inv); background: var(--inv-soft); }
+.recomendacion .titulo { color: var(--inv); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.recomendacion .principal { font-size: 1.35rem; font-weight: 700; margin: 4px 0; }
+.recomendacion p { margin: 0; color: var(--ink-soft); }
+.formulas { display: grid; gap: 10px; }
+.formulas .paso { padding: 8px 10px; background: var(--bg); border-radius: 8px; font-size: .92rem; }
+.formulas .paso b { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
+.formulas .paso code { font-family: Consolas, "Courier New", monospace; font-size: .9rem; }
+td.mejor { background: var(--inv-soft); color: #07604a; font-weight: 700; }
+tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
+.graficos { margin-top: 4px; }
+.grafico { position: relative; height: 300px; }
+.grafico-alto { height: 360px; margin: 18px 0 6px; }
+.solo-impresion { display: none; }
+.clase { display: inline-block; min-width: 24px; text-align: center; border-radius: 6px; padding: 1px 8px; font-weight: 700; }
+.clase-A { background: #d6f0e6; color: #07604a; }
+.clase-B { background: #fdf0d2; color: #7a5413; }
+.clase-C { background: #e6e9ef; color: #4a5568; }
+td .btn-sm + .btn-sm { margin-left: 4px; }
+
+/* ---------- Impresión ---------- */
+@media print {
+  body { background: #fff; }
+  .topbar, .no-print, .btn, .tabs { display: none !important; }
+  .container { padding: 0; max-width: none; }
+  .card { box-shadow: none; break-inside: avoid; }
+  .solo-impresion { display: block; color: var(--ink-soft); margin: 0 0 12px; }
+  .page-sub { display: none; }
+  [data-vista][hidden] { display: none !important; }
+}
+.badge { white-space: nowrap; }
+.tile .valor { white-space: nowrap; }

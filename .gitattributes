@@ -1,0 +1,15 @@
+# Normaliza los saltos de línea (evita cambios falsos entre Windows y Linux)
+* text=auto
+*.js   text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css  text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.sql  text
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.pdf  binary
+*.zip  binary

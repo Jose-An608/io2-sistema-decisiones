@@ -127,3 +127,43 @@ BEGIN
     SET @n26 = SCOPE_IDENTITY();
 END
 GO
+
+-- ---------- MÓDULO: INVENTARIOS ----------
+-- 6 productos (valor anual 50 000, 20 000, 10 000, 8 000, 7 000 y 5 000 -> ABC 3/2/1)
+-- con stocks elegidos para ver cada estado de alerta: ok, pedir, riesgo, agotado y en camino
+IF NOT EXISTS (SELECT 1 FROM dbo.Proveedor WHERE Nombre = N'Distribuidora Andina SAC')
+BEGIN
+    INSERT INTO dbo.Proveedor (Nombre, Contacto, Telefono, Email) VALUES
+        (N'Distribuidora Andina SAC', N'Rosa Quispe', N'952000111', N'ventas@andina.example.com'),
+        (N'Importaciones del Sur', N'Luis Mamani', N'952000222', N'contacto@sur.example.com');
+
+    DECLARE @p1 INT = (SELECT IdProveedor FROM dbo.Proveedor WHERE Nombre = N'Distribuidora Andina SAC');
+    DECLARE @p2 INT = (SELECT IdProveedor FROM dbo.Proveedor WHERE Nombre = N'Importaciones del Sur');
+
+    INSERT INTO dbo.Producto (Codigo, Nombre, IdProveedor, DemandaAnual, CostoPedido, CostoUnitario, TasaMantenimiento,
+                              CostoAlmacenamiento, TiempoEntregaDias, DesviacionDemandaDiaria, NivelServicio) VALUES
+        (N'INV-001', N'Laptop escolar',            @p1, 1000, 40, 50, 0.20, 2.0, 7,  1.5, 0.95),
+        (N'INV-002', N'Impresora multifuncional',  @p1,  800, 30, 25, 0.20, 1.5, 5,  1.2, 0.95),
+        (N'INV-003', N'Silla ergonómica',          @p2,  500, 35, 20, 0.18, 1.0, 10, 0.9, 0.90),
+        (N'INV-004', N'Cuaderno A4 (paquete)',     @p2,  400, 12, 20, 0.15, 0.5, 3,  0.8, 0.95),
+        (N'INV-005', N'Mouse inalámbrico',         @p1,  700, 10, 10, 0.20, 0.3, 4,  1.0, 0.95),
+        (N'INV-006', N'Cable HDMI 2 m',            @p2,  250,  8, 20, 0.20, 0.4, 3,  0.5, 0.90);
+
+    -- Stock inicial (entradas) y consumo (salidas)
+    INSERT INTO dbo.MovimientoStock (IdProducto, Tipo, Cantidad, Nota)
+    SELECT IdProducto, 'entrada', v.Inicial, N'Stock inicial'
+    FROM dbo.Producto p JOIN (VALUES (N'INV-001', 100), (N'INV-002', 60), (N'INV-003', 40),
+                                      (N'INV-004', 30),  (N'INV-005', 50), (N'INV-006', 40)) v(Codigo, Inicial)
+         ON v.Codigo = p.Codigo;
+
+    INSERT INTO dbo.MovimientoStock (IdProducto, Tipo, Cantidad, Nota)
+    SELECT IdProducto, 'salida', v.Salida, N'Ventas del periodo'
+    FROM dbo.Producto p JOIN (VALUES (N'INV-001', 40), (N'INV-002', 47), (N'INV-003', 32),
+                                      (N'INV-004', 30), (N'INV-005', 44), (N'INV-006', 20)) v(Codigo, Salida)
+         ON v.Codigo = p.Codigo;
+    -- Stock resultante: 60 (ok), 13 (pedir), 8 (riesgo), 0 (agotado), 6 (en camino), 20 (ok)
+
+    INSERT INTO dbo.OrdenPedido (IdProducto, Cantidad)
+    SELECT IdProducto, 78 FROM dbo.Producto WHERE Codigo = N'INV-005';
+END
+GO

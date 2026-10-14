@@ -22,14 +22,226 @@
 
   <main class="container">
     <h1 class="page-title">Inventarios</h1>
-    <p class="page-sub">Clasificación ABC, EOQ, punto de pedido, stock de seguridad y alertas.</p>
+    <p class="page-sub">Clasificación ABC, lote económico (EOQ), punto de pedido, stock de seguridad y alertas de desabastecimiento.</p>
 
-    <div class="card">
-      <div class="alert alert-warn" style="margin:0">Módulo en construcción.</div>
+    <div class="tabs no-print" role="tablist">
+      <button type="button" class="tab activa" data-tab="alertas" role="tab">Alertas</button>
+      <button type="button" class="tab" data-tab="productos" role="tab">Productos</button>
+      <button type="button" class="tab" data-tab="analisis" role="tab">Análisis EOQ</button>
+      <button type="button" class="tab" data-tab="abc" role="tab">Clasificación ABC</button>
+      <button type="button" class="tab" data-tab="movimientos" role="tab">Movimientos y pedidos</button>
+      <button type="button" class="tab" data-tab="proveedores" role="tab">Proveedores</button>
+    </div>
+
+    <!-- =============== ALERTAS =============== -->
+    <div data-vista="alertas">
+      <section class="card seccion">
+        <div class="cab-seccion">
+          <h2>Estado del inventario</h2>
+          <button type="button" class="btn btn-ghost btn-sm no-print" id="btnRefrescarAlertas">Actualizar</button>
+        </div>
+        <p class="ayuda">Compara el stock actual de cada producto con su punto de pedido (ROP) y su stock de seguridad. Los más urgentes aparecen primero.</p>
+        <div id="resumenAlertas" class="tiles"></div>
+        <div id="tablaAlertas"></div>
+      </section>
+    </div>
+
+    <!-- =============== PRODUCTOS =============== -->
+    <div data-vista="productos" hidden>
+      <section class="card seccion">
+        <h2 id="tituloFormProducto">Nuevo producto</h2>
+        <form id="formProducto" novalidate>
+          <div class="form-row">
+            <div><label for="p_codigo">Código</label><input type="text" id="p_codigo" maxlength="30" placeholder="INV-007"></div>
+            <div class="campo-ancho"><label for="p_nombre">Nombre</label><input type="text" id="p_nombre" maxlength="150" placeholder="Nombre del producto"></div>
+            <div><label for="p_proveedor">Proveedor</label><select id="p_proveedor"></select></div>
+          </div>
+          <div class="form-row" id="camposProducto"></div>
+          <div class="botones">
+            <button type="submit" class="btn" id="btnGuardarProducto">Guardar producto</button>
+            <button type="button" class="btn btn-ghost" id="btnAnalizarForm">Analizar estos datos</button>
+            <button type="button" class="btn btn-ghost" id="btnCancelarProducto" hidden>Cancelar edición</button>
+          </div>
+        </form>
+      </section>
+      <section class="card seccion">
+        <h2>Productos registrados</h2>
+        <div id="tablaProductos"></div>
+      </section>
+    </div>
+
+    <!-- =============== ANÁLISIS EOQ =============== -->
+    <div data-vista="analisis" hidden>
+      <section class="card seccion no-print">
+        <h2>Datos del producto</h2>
+        <div class="form-row">
+          <div class="campo-ancho">
+            <label for="a_producto">Cargar un producto guardado</label>
+            <select id="a_producto"></select>
+          </div>
+          <div><label for="a_stock">Stock actual (opcional)</label><input type="number" id="a_stock" min="0" step="any" placeholder="para ver la alerta"></div>
+          <div><label for="a_enOrden">Cantidad en camino</label><input type="number" id="a_enOrden" min="0" step="any" value="0"></div>
+        </div>
+        <div class="form-row" id="camposAnalisis"></div>
+        <div class="form-row">
+          <div><label for="a_diasRevision">Intervalo de revisión T (días)</label><input type="number" id="a_diasRevision" min="1" step="1" placeholder="auto (según EOQ)"></div>
+          <div><label for="a_dias">Días a simular (diente de sierra)</label><input type="number" id="a_dias" min="10" max="730" step="1" value="120"></div>
+        </div>
+        <p class="ayuda">Los resultados se recalculan automáticamente al cambiar cualquier dato.</p>
+        <div class="botones"><button type="button" class="btn btn-ghost" id="btnImprimirAnalisis">Imprimir informe</button></div>
+      </section>
+
+      <div id="errorAnalisis" class="alert alert-danger" hidden></div>
+
+      <div id="resultadosAnalisis" hidden>
+        <p class="solo-impresion" id="encabezadoImpresion"></p>
+        <section class="card seccion recomendacion">
+          <div class="titulo">Política de inventario recomendada</div>
+          <div class="principal" id="recomendacionEoq"></div>
+          <p id="detalleRecomendacion"></p>
+        </section>
+
+        <div id="alertaAnalisis"></div>
+
+        <section class="card seccion">
+          <h2>Resultados principales</h2>
+          <div id="kpisEoq" class="tiles"></div>
+        </section>
+
+        <div class="grid grid-2">
+          <section class="card seccion">
+            <h2>Desarrollo de las fórmulas</h2>
+            <div id="formulasEoq" class="formulas"></div>
+          </section>
+          <section class="card seccion">
+            <h2>Costos anuales</h2>
+            <div id="tablaCostos"></div>
+          </section>
+        </div>
+
+        <section class="card seccion">
+          <h2>Revisión continua (Q, R) frente a revisión periódica (T, M)</h2>
+          <div id="tablaPoliticas"></div>
+          <p class="ayuda" id="notaPoliticas" style="margin-top:12px"></p>
+        </section>
+
+        <div class="grid grid-2 graficos">
+          <section class="card seccion">
+            <h2>Costo total anual según el tamaño de pedido</h2>
+            <div class="grafico"><canvas id="grafCostos"></canvas></div>
+          </section>
+          <section class="card seccion">
+            <h2>Nivel de inventario (diente de sierra)</h2>
+            <div class="grafico"><canvas id="grafSierra"></canvas></div>
+          </section>
+        </div>
+        <div id="avisoGraficos" class="alert alert-warn" hidden>No se pudo cargar la librería de gráficos (se necesita conexión a Internet). Las tablas siguen disponibles.</div>
+      </div>
+    </div>
+
+    <!-- =============== ABC =============== -->
+    <div data-vista="abc" hidden>
+      <section class="card seccion">
+        <h2>Clasificación ABC por valor anual de consumo</h2>
+        <div class="form-row no-print">
+          <div><label for="corteA">Corte clase A (% acumulado)</label><input type="number" id="corteA" min="1" max="99" step="1" value="80"></div>
+          <div><label for="corteB">Corte clase B (% acumulado)</label><input type="number" id="corteB" min="2" max="100" step="1" value="95"></div>
+          <div class="alinea-abajo"><button type="button" class="btn btn-ghost" id="btnImprimirAbc">Imprimir informe</button></div>
+        </div>
+        <p class="ayuda">Valor anual = demanda anual × costo unitario. Se ordena de mayor a menor; los productos que acumulan hasta el primer corte son A, hasta el segundo B y el resto C.</p>
+        <div id="errorAbc" class="alert alert-danger" hidden></div>
+        <div id="contenidoAbc" hidden>
+          <div id="tablaResumenAbc"></div>
+          <div class="grafico grafico-alto"><canvas id="grafPareto"></canvas></div>
+          <h3 class="subtitulo">Detalle por producto</h3>
+          <div id="tablaDetalleAbc"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- =============== MOVIMIENTOS Y PEDIDOS =============== -->
+    <div data-vista="movimientos" hidden>
+      <div class="grid grid-2">
+        <section class="card seccion">
+          <h2>Registrar movimiento</h2>
+          <form id="formMovimiento" novalidate>
+            <div class="form-row">
+              <div class="campo-ancho"><label for="m_producto">Producto</label><select id="m_producto"></select></div>
+              <div><label for="m_tipo">Tipo</label>
+                <select id="m_tipo">
+                  <option value="entrada">Entrada (compra / recepción)</option>
+                  <option value="salida">Salida (venta / consumo)</option>
+                  <option value="ajuste">Ajuste (+ o −)</option>
+                </select></div>
+              <div><label for="m_cantidad">Cantidad</label><input type="number" id="m_cantidad" step="any" placeholder="0"></div>
+              <div class="campo-ancho"><label for="m_nota">Nota (opcional)</label><input type="text" id="m_nota" maxlength="200"></div>
+            </div>
+            <p class="ayuda" id="stockMovimiento"></p>
+            <button type="submit" class="btn">Registrar movimiento</button>
+          </form>
+        </section>
+        <section class="card seccion">
+          <h2>Generar pedido al proveedor</h2>
+          <form id="formOrden" novalidate>
+            <div class="form-row">
+              <div class="campo-ancho"><label for="o_producto">Producto</label><select id="o_producto"></select></div>
+              <div><label for="o_cantidad">Cantidad a pedir</label><input type="number" id="o_cantidad" min="0" step="any" placeholder="0"></div>
+            </div>
+            <p class="ayuda" id="sugerenciaOrden"></p>
+            <button type="submit" class="btn">Generar pedido</button>
+          </form>
+        </section>
+      </div>
+      <section class="card seccion">
+        <h2>Pedidos</h2>
+        <div id="tablaOrdenes"></div>
+      </section>
+      <section class="card seccion">
+        <div class="cab-seccion">
+          <h2>Últimos movimientos</h2>
+          <select id="filtroMovimientos" class="filtro"></select>
+        </div>
+        <div id="tablaMovimientos"></div>
+      </section>
+    </div>
+
+    <!-- =============== PROVEEDORES =============== -->
+    <div data-vista="proveedores" hidden>
+      <section class="card seccion">
+        <h2 id="tituloFormProveedor">Nuevo proveedor</h2>
+        <form id="formProveedor" novalidate>
+          <div class="form-row">
+            <div class="campo-ancho"><label for="v_nombre">Nombre</label><input type="text" id="v_nombre" maxlength="120"></div>
+            <div><label for="v_contacto">Contacto</label><input type="text" id="v_contacto" maxlength="120"></div>
+            <div><label for="v_telefono">Teléfono</label><input type="text" id="v_telefono" maxlength="30"></div>
+            <div><label for="v_email">Email</label><input type="email" id="v_email" maxlength="120"></div>
+          </div>
+          <div class="botones">
+            <button type="submit" class="btn">Guardar proveedor</button>
+            <button type="button" class="btn btn-ghost" id="btnCancelarProveedor" hidden>Cancelar edición</button>
+          </div>
+        </form>
+      </section>
+      <section class="card seccion">
+        <h2>Proveedores registrados</h2>
+        <div id="tablaProveedores"></div>
+      </section>
     </div>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="../js/common/api.js"></script>
   <script src="../js/common/ui.js"></script>
+  <script src="../js/common/charts.js"></script>
+  <script src="../js/inventario/comun.js"></script>
+  <script src="../js/inventario/productos.js"></script>
+  <script src="../js/inventario/movimientos.js"></script>
+  <script src="../js/inventario/eoq.js"></script>
+  <script src="../js/inventario/abc.js"></script>
+  <script src="../js/inventario/alertas.js"></script>
+  <script>
+    Tabs.iniciar();
+    Inv.cargar().catch((e) => UI.toast(e.message, 'error', 6000));
+  </script>
 </body>
 </html>

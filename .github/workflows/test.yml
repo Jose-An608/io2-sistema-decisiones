@@ -1,0 +1,19 @@
+# Corre las pruebas automáticamente en cada subida a GitHub
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # msnodesqlv8 solo funciona en Windows; las pruebas no usan SQL Server real
+      - run: npm ci --omit=optional
+      - run: npm test
