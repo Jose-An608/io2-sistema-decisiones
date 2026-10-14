@@ -22,14 +22,95 @@
 
   <main class="container">
     <h1 class="page-title">Teoría de decisiones</h1>
-    <p class="page-sub">Criterios bajo incertidumbre, valor monetario esperado y árboles de decisión.</p>
+    <p class="page-sub">Registra alternativas y estados de la naturaleza, completa la matriz de pagos y compara los criterios de decisión.</p>
 
-    <div class="card">
-      <div class="alert alert-warn" style="margin:0">Módulo en construcción.</div>
-    </div>
+    <!-- Barra de decisiones guardadas -->
+    <section class="card toolbar no-print">
+      <div class="toolbar-select">
+        <label for="selDecisiones">Decisión guardada</label>
+        <select id="selDecisiones"></select>
+      </div>
+      <div class="toolbar-botones">
+        <button type="button" class="btn btn-ghost" id="btnNueva">Nueva</button>
+        <button type="button" class="btn" id="btnGuardar">Guardar</button>
+        <button type="button" class="btn btn-ghost" id="btnImprimir">Imprimir informe</button>
+        <button type="button" class="btn btn-danger" id="btnEliminar">Eliminar</button>
+      </div>
+    </section>
+
+    <!-- Datos generales -->
+    <section class="card seccion">
+      <h2>1. Problema</h2>
+      <div class="form-row">
+        <div class="campo-ancho">
+          <label for="nombre">Nombre de la decisión</label>
+          <input type="text" id="nombre" maxlength="150" placeholder="Ej.: Tamaño de la planta">
+        </div>
+        <div>
+          <label for="tipo">Los pagos son</label>
+          <select id="tipo">
+            <option value="beneficio">Beneficios (mayor es mejor)</option>
+            <option value="costo">Costos (menor es mejor)</option>
+          </select>
+        </div>
+        <div>
+          <label for="alfa">Coeficiente de optimismo α (Hurwicz): <strong id="alfaTexto">0.50</strong></label>
+          <input type="range" id="alfa" min="0" max="1" step="0.05" value="0.5">
+        </div>
+      </div>
+      <label for="descripcion">Descripción (opcional)</label>
+      <input type="text" id="descripcion" maxlength="500" placeholder="Describe brevemente el problema">
+    </section>
+
+    <!-- Matriz de pagos -->
+    <section class="card seccion">
+      <h2>2. Matriz de pagos</h2>
+      <p class="ayuda">Filas = alternativas. Columnas = estados de la naturaleza. Las probabilidades son opcionales: si las ingresas (deben sumar 1) se calcula también el VME y el VEIP.</p>
+      <div id="editorMatriz"></div>
+      <div class="acciones-matriz no-print">
+        <button type="button" class="btn btn-ghost btn-sm" data-accion="add-alt" id="btnAddAlt">+ Alternativa</button>
+      </div>
+    </section>
+
+    <!-- Resultados -->
+    <section class="seccion">
+      <h2>3. Resultados</h2>
+      <p class="solo-impresion" id="infoImpresion"></p>
+      <div id="mensajeResultados"></div>
+
+      <div id="resultados" hidden>
+        <div class="card recomendacion" id="recomendacion"></div>
+
+        <div class="card seccion-interna">
+          <h3>Comparación de criterios</h3>
+          <div id="tablaCriterios"></div>
+          <p class="ayuda" id="notaCriterios"></p>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>Matriz de arrepentimiento (Savage)</h3>
+            <div id="tablaArrepentimiento"></div>
+          </div>
+          <div class="card">
+            <h3>Información perfecta</h3>
+            <div id="bloqueVeip"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-2 graficos">
+          <div class="card"><div class="grafico"><canvas id="grafVotos"></canvas></div></div>
+          <div class="card"><div class="grafico"><canvas id="grafValor"></canvas></div></div>
+        </div>
+      </div>
+    </section>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="../js/common/api.js"></script>
   <script src="../js/common/ui.js"></script>
+  <script src="../js/decisiones/criterios.js"></script>
+  <script src="../js/decisiones/matriz.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => Matriz.iniciar());</script>
 </body>
 </html>

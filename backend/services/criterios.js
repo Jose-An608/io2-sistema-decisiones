@@ -214,4 +214,5 @@ function analizar({ matriz, alternativas, tipo = 'beneficio', alfa = 0.5, probab
 module.exports = {
   maximax, maximin, hurwicz, laplace, savage, vme, veip,
   matrizArrepentimiento, analizar,
+  validarMatriz, validarProbabilidades, validarTipo,
 };

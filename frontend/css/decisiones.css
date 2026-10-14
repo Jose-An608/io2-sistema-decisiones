@@ -1,2 +1,71 @@
-/* Estilos del módulo Teoría de decisiones */
+/* =====================================================
+   Estilos del módulo Teoría de decisiones
+   ===================================================== */
+[hidden] { display: none !important; }
 .nav a.active { background: var(--dec-soft); color: var(--dec); }
+.btn { background: var(--dec); }
+.btn:hover { background: #55309f; }
+.btn-ghost { background: transparent; color: var(--dec); }
+.btn-ghost:hover { background: var(--dec-soft); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #a02e22; }
+input:focus, select:focus { outline-color: var(--dec-soft); border-color: var(--dec); }
+
+input[type="range"] { accent-color: var(--dec); padding: 0; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; margin-bottom: 10px; }
+.seccion { margin-bottom: 20px; }
+.seccion-interna { margin: 20px 0; }
+.ayuda { color: var(--ink-soft); font-size: .9rem; margin: 0 0 12px; }
+
+/* ---------- Barra de herramientas ---------- */
+.toolbar { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+.toolbar-select { flex: 1 1 280px; max-width: 460px; }
+.toolbar-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.campo-ancho { grid-column: span 2; }
+@media (max-width: 640px) { .campo-ancho { grid-column: auto; } }
+
+/* ---------- Editor de la matriz ---------- */
+.editor { min-width: 520px; }
+.editor th, .editor td { padding: 6px 8px; vertical-align: middle; text-transform: none; letter-spacing: 0; }
+.editor thead th { background: var(--dec-soft); color: var(--ink); font-size: .9rem; }
+.editor tbody th { background: var(--bg); color: var(--ink); font-size: .9rem; }
+.editor .fila-prob th { background: #fafafe; font-weight: 600; font-size: .85rem; color: var(--ink-soft); }
+.editor .sin-borde { border-bottom: none; background: transparent; }
+.editor input { padding: 7px 9px; min-width: 96px; }
+.editor td input { text-align: right; font-variant-numeric: tabular-nums; }
+.celda-cab { display: flex; gap: 4px; align-items: center; }
+.btn-x {
+  border: none; background: transparent; color: var(--ink-soft); font-size: 1.2rem; line-height: 1;
+  cursor: pointer; padding: 2px 6px; border-radius: 6px;
+}
+.btn-x:hover:not(:disabled) { background: #fdecea; color: var(--danger); }
+.btn-x:disabled { opacity: .3; cursor: not-allowed; }
+.acciones-matriz { margin-top: 12px; }
+
+/* ---------- Resultados ---------- */
+.recomendacion { border-left: 5px solid var(--dec); background: var(--dec-soft); }
+.recomendacion .titulo { color: var(--dec); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.recomendacion .principal { font-size: 1.4rem; font-weight: 700; margin: 4px 0; }
+.recomendacion p { margin: 0; color: var(--ink-soft); }
+td.mejor { background: var(--dec-soft); color: #3f1f8c; font-weight: 700; }
+.stats { display: grid; gap: 10px; }
+.stat { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.stat:last-child { border-bottom: none; }
+.stat strong { font-variant-numeric: tabular-nums; }
+.stat.destacado strong { color: var(--dec); font-size: 1.15rem; }
+.graficos { margin-top: 20px; }
+.grafico { position: relative; height: 280px; }
+.solo-impresion { display: none; }
+
+/* ---------- Impresión del informe ---------- */
+@media print {
+  body { background: #fff; }
+  .topbar, .no-print, .btn, .btn-x { display: none !important; }
+  .container { padding: 0; max-width: none; }
+  .card { box-shadow: none; break-inside: avoid; }
+  .solo-impresion { display: block; color: var(--ink-soft); margin: 0 0 12px; }
+  .editor input, #nombre, #descripcion, #tipo, #alfa { border: none; background: transparent; padding: 0; appearance: none; }
+  .editor .sin-borde, #selDecisiones { display: none; }
+  .page-sub { display: none; }
+}
