@@ -10,6 +10,8 @@ Aplicación web que integra tres técnicas de Investigación Operativa en un sol
 
 **Stack:** HTML + CSS + JavaScript (frontend) · Node.js + Express (backend) · SQL Server (`mssql`) · Chart.js (gráficos).
 
+**Sistema en línea:** https://io2-sistema-decisiones.onrender.com
+
 > Universidad Nacional Jorge Basadre Grohmann (UNJBG) · Ingeniería de Sistemas · Investigación Operativa II
 
 ---
@@ -71,6 +73,11 @@ npm install
 4. Abrir **http://localhost:3000**. Comprobación rápida de la API: http://localhost:3000/api/health
 
 ## Despliegue en la nube
+
+**Aplicación publicada:** https://io2-sistema-decisiones.onrender.com  
+Comprobación de la conexión con la base de datos: https://io2-sistema-decisiones.onrender.com/api/health
+
+> Nota: el plan gratuito de Render suspende el servicio tras 15 minutos sin uso; la primera visita después de una pausa puede tardar cerca de un minuto en responder.
 
 El proyecto incluye `render.yaml` para desplegar la aplicación en **Render** con la base de datos en **Azure SQL**. Guía paso a paso: [`docs/despliegue.md`](docs/despliegue.md). Para cargar los datos en la nube se usa `database/cloud_todo_en_uno.sql`.
 
