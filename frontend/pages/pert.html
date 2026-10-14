@@ -24,6 +24,12 @@
     <h1 class="page-title">PERT / CPM</h1>
     <p class="page-sub">Ruta crítica, holguras y probabilidad de cumplir un plazo para la programación de proyectos.</p>
 
+    <div class="tabs no-print" role="tablist">
+      <button type="button" class="tab activa" data-tab="plan" role="tab">Planificación</button>
+      <button type="button" class="tab" data-tab="gantt" role="tab">Gantt y seguimiento</button>
+    </div>
+
+    <div data-vista="plan">
     <section class="card toolbar no-print">
       <div class="toolbar-select">
         <label for="selProyectos">Proyecto guardado</label>
@@ -92,11 +98,53 @@
         <p class="ayuda" id="notaRed" style="margin-top:12px"></p>
       </section>
     </div>
+    </div>
+
+    <!-- =============== GANTT Y SEGUIMIENTO =============== -->
+    <div data-vista="gantt" hidden>
+      <div id="avisoSeguimiento" class="alert alert-warn" hidden></div>
+
+      <section class="card seccion" id="panelResumenSeg">
+        <div class="cab-seccion">
+          <h2>Avance del proyecto</h2>
+          <div class="corte no-print">
+            <label for="diaCorte">Día de corte</label>
+            <input type="number" id="diaCorte" min="0" step="1" placeholder="hoy">
+            <button type="button" class="btn btn-ghost btn-sm" id="btnActualizarSeg">Actualizar</button>
+          </div>
+        </div>
+        <div id="resumenSeg" class="tiles"></div>
+        <p class="ayuda" id="notaResumenSeg"></p>
+      </section>
+
+      <section class="card seccion">
+        <h2>Diagrama de Gantt</h2>
+        <div id="ganttContenedor" class="red-scroll"></div>
+        <div class="leyenda-gantt">
+          <span><i class="m-crit"></i> Actividad crítica</span>
+          <span><i class="m-norm"></i> Actividad con holgura</span>
+          <span><i class="m-hol"></i> Holgura</span>
+          <span><i class="m-hoy"></i> Día de corte</span>
+          <span class="solo-seg">Zona oscura = avance real</span>
+        </div>
+      </section>
+
+      <section class="card seccion" id="panelTablaSeg">
+        <div class="cab-seccion">
+          <h2>Registro del avance real</h2>
+          <button type="button" class="btn no-print" id="btnGuardarAvance">Guardar avance</button>
+        </div>
+        <p class="ayuda">Indica el porcentaje completado de cada actividad y, si quieres, las fechas reales. Se compara con lo que el plan esperaba para el día de corte.</p>
+        <div id="tablaSeguimiento" class="table-wrap"></div>
+      </section>
+    </div>
   </main>
 
   <script src="../js/common/api.js"></script>
   <script src="../js/common/ui.js"></script>
   <script src="../js/pert/red.js"></script>
+  <script src="../js/pert/gantt.js"></script>
   <script src="../js/pert/proyectos.js"></script>
+  <script src="../js/pert/seguimiento.js"></script>
 </body>
 </html>

@@ -10,6 +10,8 @@ const Proyectos = (() => {
   let idActual = null;         // proyecto guardado que se está editando
   let secuencia = 0;
   let temporizador = null;
+  let ultimo = null;           // último análisis calculado
+  const avisar = () => document.dispatchEvent(new CustomEvent('pert:proyecto'));
 
   const ejemplo = () => [
     { id: 'A', nombre: 'Inicio', duracion: '3', optimista: '2', masProbable: '3', pesimista: '4', predecesoras: '' },
@@ -86,6 +88,7 @@ const Proyectos = (() => {
   }
 
   function mostrar(r) {
+    ultimo = r;
     const pert = r.modo === 'pert';
     const rutas = r.rutasCriticas.map((x) => x.actividades.join(' → '));
     $('rcPrincipal').textContent = `Duración del proyecto: ${f(r.duracionProyecto)} días`;
@@ -186,6 +189,7 @@ const Proyectos = (() => {
       idActual = r.id;
       await cargarLista(idActual);
       UI.toast('Proyecto guardado.', 'ok');
+      avisar();
     } catch (e) {
       UI.toast(e.message, 'error', 6000);
     }
@@ -206,6 +210,7 @@ const Proyectos = (() => {
       }));
       pintarEditor();
       calcular();
+      avisar();
     } catch (e) {
       UI.toast(e.message, 'error', 6000);
     }
@@ -223,6 +228,7 @@ const Proyectos = (() => {
     actividades = ejemplo();
     pintarEditor();
     calcular();
+    avisar();
   }
 
   async function eliminar() {
@@ -275,5 +281,5 @@ const Proyectos = (() => {
   }
 
   iniciar();
-  return { calcular };
+  return { calcular, estado: () => ({ id: idActual, analisis: ultimo }) };
 })();
