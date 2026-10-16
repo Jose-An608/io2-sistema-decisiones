@@ -4,9 +4,10 @@ Sistema de apoyo a la toma de decisiones · Investigación Operativa II
 
 ## 1. Primeros pasos
 
-1. Tener el servidor en marcha (`npm run dev`) y la base de datos creada (ver `README.md`).
-2. Abrir **http://localhost:3000**. El portal muestra tres tarjetas: **PERT/CPM**, **Inventarios** y **Teoría de decisiones**.
-3. Cada módulo tiene su propia página; el enlace superior permite volver al portal.
+1. **Sistema en línea**: abrir **https://io2-sistema-decisiones.onrender.com**. Al usar el plan gratuito, el servicio se suspende tras 15 minutos sin uso y la primera visita puede tardar cerca de un minuto en cargar; esperar sin recargar la página.
+2. **Instalación local** (opcional): tener el servidor en marcha (`npm start`) y la base de datos creada (ver `README.md`), y abrir **http://localhost:3000**.
+3. El portal muestra tres tarjetas: **PERT/CPM**, **Inventarios** y **Teoría de decisiones**.
+4. Cada módulo tiene su propia página; el enlace superior permite volver al portal.
 
 **Convenciones generales**
 
