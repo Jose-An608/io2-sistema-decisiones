@@ -38,11 +38,11 @@ Dos pestañas: **Matriz de pagos** y **Árbol de decisión**.
 
 ![Árbol de decisión](img/dec_arbol.png)
 
-Dos formas de usarlo:
+El árbol **no se escribe a mano**: se genera automáticamente a partir de la pestaña **Matriz de pagos**.
 
-- **Generar desde la matriz**: construye automáticamente un árbol de un nivel (decisión → azar → pagos) a partir de la matriz actual.
-- **Construir a mano** en el panel **Estructura**: añadir nodos de **decisión** (cuadrado), de **azar** (círculo, con probabilidades de sus ramas que suman 1) y **finales** (pago). Admite **2, 3 o más ramas** por nodo, y costos en las ramas de decisión (por ejemplo, el costo del estudio).
-- **Cargar ejemplo** carga el caso clásico *Thompson Lumber*.
+- **Generación automática**: al abrir la pestaña, el sistema construye un árbol de un nivel (decisión → azar → pagos) con las alternativas, los estados de la naturaleza, sus probabilidades y los pagos de la matriz. Para cambiar datos, se edita la matriz y se vuelve a esta pestaña; el botón **Actualizar desde la matriz** lo regenera en el momento.
+- **Cargar ejemplo** carga el caso clásico *Thompson Lumber* (estudio de mercado con decisión secuencial), que se puede consultar y guardar.
+- **Guardar**, **Eliminar** e **Imprimir informe** funcionan igual que en la matriz.
 
 **Evaluación**: muestra el valor esperado del árbol, la lista de **decisiones óptimas** y el diagrama: línea gruesa = rama óptima, línea punteada con doble corte `//` = alternativa descartada; el número bajo cada nodo es su valor esperado (roll-back).
 

@@ -1,5 +1,5 @@
 // =====================================================
-// arbol.js (frontend) - editor visual del árbol de decisión,
+// arbol.js (frontend) - árbol de decisión generado desde la matriz de pagos,
 // evaluación (hacia atrás, en el servidor) y diagrama SVG.
 // =====================================================
 const Arbol = (() => {
@@ -10,6 +10,7 @@ const Arbol = (() => {
   let temporizador = null;
   let secuencia = 0;
   let listaCargada = false;
+  const MSG_VACIO = 'Completa la matriz de pagos y el árbol se genera solo, o pulsa "Cargar ejemplo".';
 
   // ---------- Modelo en pantalla ----------
   // Los números se guardan como texto mientras se escribe (permite campos vacíos)
@@ -20,7 +21,7 @@ const Arbol = (() => {
 
   function nuevoEstado() {
     return {
-      id: null, nombre: '', descripcion: '', tipo: 'beneficio',
+      id: null, nombre: '', descripcion: '', tipo: 'beneficio', vacio: true,
       raiz: { tipo: 'decision', etiqueta: 'Decisión', pago: '', ramas: [ramaVacia('Alternativa 1'), ramaVacia('Alternativa 2')] },
     };
   }
@@ -39,9 +40,6 @@ const Arbol = (() => {
       })),
     };
   }
-
-  // Nodo que está en la ruta "0.2.1" (índices de rama desde la raíz; '' = raíz)
-  const nodoEn = (ruta) => (ruta === '' ? estado.raiz : ruta.split('.').reduce((n, i) => n.ramas[Number(i)].nodo, estado.raiz));
 
   const aNumero = (v) => (v === '' || v === null || v === undefined ? NaN : Number(v));
 
@@ -74,108 +72,6 @@ const Arbol = (() => {
       tipo: estado.tipo,
       arbol: convertir(estado.raiz),
     };
-  }
-
-  // ---------- Editor anidado ----------
-
-  const ICONO = { decision: '■', azar: '●', terminal: '▶' };
-  const NOMBRE_TIPO = { decision: 'Decisión', azar: 'Azar', terminal: 'Terminal' };
-
-  function htmlNodo(n, ruta) {
-    const np = ruta.join('.');
-    const opciones = ['decision', 'azar', 'terminal']
-      .map((t) => `<option value="${t}" ${t === n.tipo ? 'selected' : ''}>${ICONO[t]} ${NOMBRE_TIPO[t]}</option>`).join('');
-    let h = `<div class="nodo nodo-${n.tipo}">
-      <div class="nodo-cab">
-        <select data-ak="tipo" data-np="${np}" aria-label="Tipo de nodo">${opciones}</select>
-        <input type="text" maxlength="100" data-ak="etiqueta" data-np="${np}" value="${UI.esc(n.etiqueta)}" placeholder="${n.tipo === 'terminal' ? 'Resultado (opcional)' : 'Nombre del nodo'}" aria-label="Nombre del nodo">`;
-    if (n.tipo === 'terminal') {
-      h += `<label class="mini">Pago <input type="number" step="any" data-ak="pago" data-np="${np}" value="${UI.esc(n.pago)}" placeholder="0"></label>`;
-    } else {
-      h += `<button type="button" class="btn btn-ghost btn-sm no-print" data-aa="add-rama" data-np="${np}">+ Rama</button>`;
-    }
-    h += '</div>';
-
-    if (n.tipo !== 'terminal') {
-      h += '<div class="ramas">';
-      n.ramas.forEach((r, i) => {
-        h += `<div class="rama"><div class="rama-cab">
-          <input type="text" maxlength="100" data-ak="r-etiqueta" data-np="${np}" data-bi="${i}" value="${UI.esc(r.etiqueta)}" placeholder="Etiqueta de la rama" aria-label="Etiqueta de la rama">
-          <label class="mini">Valor <input type="number" step="any" data-ak="r-valor" data-np="${np}" data-bi="${i}" value="${UI.esc(r.valorRama)}" placeholder="0"></label>`;
-        if (n.tipo === 'azar') {
-          h += `<label class="mini">Prob. <input type="number" step="any" min="0" max="1" data-ak="r-prob" data-np="${np}" data-bi="${i}" value="${UI.esc(r.probabilidad)}" placeholder="0.5"></label>`;
-        }
-        h += `<button type="button" class="btn-x no-print" data-aa="del-rama" data-np="${np}" data-bi="${i}" title="Quitar rama" ${n.ramas.length <= 2 ? 'disabled' : ''}>×</button>
-          </div>${htmlNodo(r.nodo, ruta.concat(i))}</div>`;
-      });
-      if (n.tipo === 'azar') h += `<div class="suma-azar" data-suma="${np}"></div>`;
-      h += '</div>';
-    }
-    return h + '</div>';
-  }
-
-  function dibujarEditor() {
-    $('editorArbol').innerHTML = htmlNodo(estado.raiz, []);
-    actualizarSumas();
-  }
-
-  // Muestra si las probabilidades de cada nodo de azar suman 1
-  function actualizarSumas() {
-    document.querySelectorAll('#editorArbol [data-suma]').forEach((el) => {
-      const n = nodoEn(el.dataset.suma);
-      const suma = n.ramas.reduce((a, r) => a + (Number(r.probabilidad) || 0), 0);
-      const ok = n.ramas.every((r) => r.probabilidad !== '') && Math.abs(suma - 1) < 1e-6;
-      el.innerHTML = `<span class="badge ${ok ? 'badge-ok' : 'badge-danger'}">Suma de probabilidades: ${UI.num(suma, 2)}</span>`;
-    });
-  }
-
-  function cambiarTipo(n, tipo) {
-    if (tipo === n.tipo) return;
-    if (tipo === 'terminal') {
-      n.ramas = [];
-      n.pago = '';
-    } else if (n.tipo === 'terminal') {
-      n.ramas = [ramaVacia('Rama 1'), ramaVacia('Rama 2')];
-    }
-    n.tipo = tipo;
-  }
-
-  // Escribir actualiza el modelo sin redibujar (así no se pierde el cursor)
-  function alEscribir(ev) {
-    const t = ev.target;
-    const k = t.dataset && t.dataset.ak;
-    if (!k || k === 'tipo') return;
-    const n = nodoEn(t.dataset.np);
-    const bi = Number(t.dataset.bi);
-    if (k === 'etiqueta') n.etiqueta = t.value;
-    else if (k === 'pago') n.pago = t.value;
-    else if (k === 'r-etiqueta') n.ramas[bi].etiqueta = t.value;
-    else if (k === 'r-valor') n.ramas[bi].valorRama = t.value;
-    else if (k === 'r-prob') { n.ramas[bi].probabilidad = t.value; actualizarSumas(); }
-    programarCalculo();
-  }
-
-  function alCambiar(ev) {
-    const t = ev.target;
-    if (!t.dataset || t.dataset.ak !== 'tipo') return;
-    cambiarTipo(nodoEn(t.dataset.np), t.value);
-    dibujarEditor();
-    programarCalculo();
-  }
-
-  function alPulsar(ev) {
-    const b = ev.target.closest('[data-aa]');
-    if (!b) return;
-    const n = nodoEn(b.dataset.np);
-    if (b.dataset.aa === 'add-rama') {
-      n.ramas.push(ramaVacia(`Rama ${n.ramas.length + 1}`));
-    } else if (b.dataset.aa === 'del-rama' && n.ramas.length > 2) {
-      n.ramas.splice(Number(b.dataset.bi), 1);
-    } else {
-      return;
-    }
-    dibujarEditor();
-    programarCalculo();
   }
 
   // ---------- Evaluación ----------
@@ -327,7 +223,6 @@ const Arbol = (() => {
 
   function mostrar() {
     pintarFormulario();
-    dibujarEditor();
     calcular();
   }
 
@@ -342,7 +237,7 @@ const Arbol = (() => {
 
   async function cargar(id) {
     const a = await Api.get(`/api/decisiones/arboles/${id}`);
-    estado = { id: a.id, nombre: a.nombre, descripcion: a.descripcion || '', tipo: a.tipo, raiz: desdeServidor(a.arbol) };
+    estado = { id: a.id, nombre: a.nombre, descripcion: a.descripcion || '', tipo: a.tipo, origen: 'guardado', raiz: desdeServidor(a.arbol) };
     mostrar();
   }
 
@@ -350,14 +245,13 @@ const Arbol = (() => {
     estado = nuevoEstado();
     $('selArboles').value = '';
     pintarFormulario();
-    dibujarEditor();
-    limpiar('Completa el árbol (pagos y probabilidades) para ver la evaluación.');
+    limpiar(MSG_VACIO);
   }
 
   async function cargarEjemplo() {
     try {
       const e = await Api.get('/api/decisiones/arboles/ejemplo');
-      estado = { id: null, nombre: e.nombre, descripcion: e.descripcion, tipo: e.tipo, raiz: desdeServidor(e.arbol) };
+      estado = { id: null, nombre: e.nombre, descripcion: e.descripcion, tipo: e.tipo, origen: 'ejemplo', raiz: desdeServidor(e.arbol) };
       $('selArboles').value = '';
       mostrar();
       UI.toast('Ejemplo cargado. Pulsa Guardar si quieres conservarlo.', 'ok');
@@ -367,6 +261,10 @@ const Arbol = (() => {
   }
 
   async function guardar() {
+    if (estado.vacio) {
+      UI.toast('Primero completa la matriz de pagos o carga el ejemplo.', 'error', 5000);
+      return;
+    }
     if (!estado.nombre.trim()) {
       UI.toast('Escribe un nombre para el árbol.', 'error');
       $('arbolNombre').focus();
@@ -382,6 +280,7 @@ const Arbol = (() => {
         estado.id = r.id;
         UI.toast('Árbol guardado.', 'ok');
       }
+      estado.origen = 'guardado';
       await cargarLista(estado.id);
     } catch (err) {
       UI.toast(err.message, 'error', 6000);
@@ -415,15 +314,14 @@ const Arbol = (() => {
   // Arma el árbol con lo que hay en la pestaña Matriz:
   //   decisión (una rama por alternativa) -> azar (una rama por estado, con su probabilidad)
   //   -> terminal (el pago de esa celda)
-  // Es una copia: si luego cambias la matriz, vuelve a generar el árbol.
-  function generarDesdeMatriz() {
+  // Se regenera solo al abrir la pestaña Árbol (si el árbol en pantalla viene de la matriz).
+  function generarDesdeMatriz(silencioso = false) {
     const m = Matriz.obtenerEstado();
     const hayPagos = m.matriz.some((fila) => fila.some((v) => v !== ''));
     if (!hayPagos) {
-      UI.toast('Primero completa la matriz de pagos en la pestaña "Matriz de pagos".', 'error', 5000);
+      if (!silencioso) UI.toast('Primero completa la matriz de pagos en la pestaña "Matriz de pagos".', 'error', 5000);
       return;
     }
-    if (estado.id === null && !window.confirm('Se reemplazará el árbol que estás editando por uno generado desde la matriz. ¿Continuar?')) return;
 
     const ramas = m.alternativas.map((alt, i) => {
       // Con un solo estado no hay azar: el pago va directo
@@ -448,15 +346,18 @@ const Arbol = (() => {
       nombre: m.nombre ? `Árbol de: ${m.nombre}` : 'Árbol generado desde la matriz',
       descripcion: m.descripcion || '',
       tipo: m.tipo,
+      origen: 'matriz',
       raiz: { tipo: 'decision', etiqueta: m.nombre || 'Decisión', pago: '', ramas },
     };
     $('selArboles').value = '';
     mostrar();
 
     const faltanProbs = m.estados.length > 1 && m.estados.some((e) => e.probabilidad === '' || e.probabilidad === null);
-    UI.toast(faltanProbs
-      ? 'Árbol generado. Completa las probabilidades de cada nodo de azar para ver la evaluación.'
-      : 'Árbol generado desde la matriz de pagos.', faltanProbs ? '' : 'ok', 5000);
+    if (!silencioso) {
+      UI.toast(faltanProbs
+        ? 'Árbol generado. Completa las probabilidades de los estados en la matriz de pagos.'
+        : 'Árbol generado desde la matriz de pagos.', faltanProbs ? '' : 'ok', 5000);
+    }
   }
 
   // ---------- Pestañas y arranque ----------
@@ -465,6 +366,9 @@ const Arbol = (() => {
     document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('activa', b.dataset.tab === cual));
     $('vistaMatriz').hidden = cual !== 'matriz';
     $('vistaArbol').hidden = cual !== 'arbol';
+    if (cual === 'arbol' && listaCargada && (estado.origen === 'matriz' || estado.vacio)) {
+      generarDesdeMatriz(true);
+    }
     if (cual === 'arbol' && !listaCargada) {
       listaCargada = true;
       try {
@@ -474,24 +378,18 @@ const Arbol = (() => {
         UI.toast(`No se pudo leer la base de datos: ${err.message}`, 'error', 6000);
       }
       nuevo();
+      generarDesdeMatriz(true);
     }
   }
 
   function iniciar() {
     document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => abrirPestana(b.dataset.tab)));
 
-    const ed = $('editorArbol');
-    ed.addEventListener('input', alEscribir);
-    ed.addEventListener('change', alCambiar);
-    ed.addEventListener('click', alPulsar);
-
     $('arbolNombre').addEventListener('input', (e) => { estado.nombre = e.target.value; });
     $('arbolDescripcion').addEventListener('input', (e) => { estado.descripcion = e.target.value; });
-    $('arbolTipo').addEventListener('change', (e) => { estado.tipo = e.target.value; programarCalculo(); });
 
-    $('btnArbolNuevo').addEventListener('click', nuevo);
     $('btnArbolEjemplo').addEventListener('click', cargarEjemplo);
-    $('btnArbolDesdeMatriz').addEventListener('click', generarDesdeMatriz);
+    $('btnArbolDesdeMatriz').addEventListener('click', () => generarDesdeMatriz(false));
     $('btnArbolGuardar').addEventListener('click', guardar);
     $('btnArbolEliminar').addEventListener('click', eliminar);
     $('btnArbolImprimir').addEventListener('click', imprimir);

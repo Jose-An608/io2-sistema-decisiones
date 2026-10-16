@@ -118,8 +118,7 @@
           <select id="selArboles"></select>
         </div>
         <div class="toolbar-botones">
-          <button type="button" class="btn btn-ghost" id="btnArbolNuevo">Nuevo</button>
-          <button type="button" class="btn btn-ghost" id="btnArbolDesdeMatriz">Generar desde la matriz</button>
+          <button type="button" class="btn btn-ghost" id="btnArbolDesdeMatriz">Actualizar desde la matriz</button>
           <button type="button" class="btn btn-ghost" id="btnArbolEjemplo">Cargar ejemplo</button>
           <button type="button" class="btn" id="btnArbolGuardar">Guardar</button>
           <button type="button" class="btn btn-ghost" id="btnArbolImprimir">Imprimir informe</button>
@@ -136,7 +135,7 @@
           </div>
           <div>
             <label for="arbolTipo">Los valores son</label>
-            <select id="arbolTipo">
+            <select id="arbolTipo" disabled>
               <option value="beneficio">Beneficios (se elige el mayor)</option>
               <option value="costo">Costos (se elige el menor)</option>
             </select>
@@ -145,15 +144,12 @@
         <label for="arbolDescripcion">Descripción (opcional)</label>
         <input type="text" id="arbolDescripcion" maxlength="500" placeholder="Describe brevemente el problema">
 
-        <div class="alert alert-ok ayuda-modos no-print">Dos formas de crear el árbol: <strong>Generar desde la matriz</strong> (usa los datos de la pestaña Matriz de pagos) o <strong>armarlo a mano</strong> con el editor de abajo.</div>
-        <h3 class="subtitulo">Estructura</h3>
+        <div class="alert alert-ok ayuda-modos no-print">El árbol se <strong>genera automáticamente</strong> a partir de la pestaña <strong>Matriz de pagos</strong>: una decisión con una rama por alternativa y, en cada una, los estados de la naturaleza con sus probabilidades y pagos. Para cambiar los datos, edita la matriz; el árbol se actualiza al volver a esta pestaña. También puedes cargar el caso de ejemplo del estudio de mercado.</div>
         <p class="ayuda">
-          <span class="ico ico-decision">■</span> Decisión: tú eliges una rama.
-          <span class="ico ico-azar">●</span> Azar: ocurre una rama según su probabilidad (deben sumar 1).
+          <span class="ico ico-decision">■</span> Decisión: se elige una rama.
+          <span class="ico ico-azar">●</span> Azar: ocurre una rama según su probabilidad.
           <span class="ico ico-terminal">▶</span> Terminal: resultado final con su pago.
-          El <strong>valor</strong> de una rama es el costo o beneficio de tomarla (en beneficios, un costo va negativo).
         </p>
-        <div id="editorArbol"></div>
       </section>
 
       <section class="seccion">
